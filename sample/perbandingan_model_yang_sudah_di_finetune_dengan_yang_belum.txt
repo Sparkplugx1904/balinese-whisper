@@ -1,0 +1,414 @@
+======================================================================
+  ADVANCED WER EVALUATOR -- MULTI-STRATEGY (Python)
+======================================================================
+  metadata          : 10 baris
+  whisper-balinese  : 10 baris
+  whisper-unfinetuned: 10 baris
+
+──────────────────────────────────────────────────────────────────────
+  ► Memproses Whisper Balinese (fine-tuned)...
+
+  10 kalimat siap dievaluasi.
+
+
+======================================================================
+  [MODEL: Whisper Balinese (Fine-tuned)]
+======================================================================
+
+======================================================================
+  [KELOMPOK: Fasih]
+======================================================================
+  Kalimat   : 5
+  Kata (N)  : 129
+  Char (N)  : 796
+
+  +--------------------------------------------------+
+  |  METRIK               |  NILAI    |  %           |
+  +--------------------------------------------------+
+  |  WER Klasik (biner)    |    0.2636  |     26.4%    |
+  |  WER Soft (berbobot)   |    0.1752  |     17.5%    |
+  |  WER Soft + Fonetik    |    0.1695  |     17.0%    |
+  |  CharWER               |    0.0704  |      7.0%    |
+  |  TER (avg)             |    0.2632  |     26.3%    |
+  +--------------------------------------------------+
+
+  Breakdown Error Klasik:
+     Substitusi (S)  :    30  (23.3% dari N)
+     Delesi     (D)  :     2  (1.6% dari N)
+     Insersi    (I)  :     2  (1.6% dari N)
+     Total Error     :    34
+
+  Insight Soft WER:
+     30 substitusi dihukum penuh oleh WER Klasik
+     Pengurangan penalti efektif: 7.4 poin (25%)
+
+  Distribusi Kualitas:
+     Baik                 2x  **
+     Cukup                1x  *
+     Sangat Baik          2x  **
+
+======================================================================
+  [KELOMPOK: Kurang Fasih]
+======================================================================
+  Kalimat   : 5
+  Kata (N)  : 198
+  Char (N)  : 1338
+
+  +--------------------------------------------------+
+  |  METRIK               |  NILAI    |  %           |
+  +--------------------------------------------------+
+  |  WER Klasik (biner)    |    0.3687  |     36.9%    |
+  |  WER Soft (berbobot)   |    0.2345  |     23.5%    |
+  |  WER Soft + Fonetik    |    0.2292  |     22.9%    |
+  |  CharWER               |    0.0882  |      8.8%    |
+  |  TER (avg)             |    0.3730  |     37.3%    |
+  +--------------------------------------------------+
+
+  Breakdown Error Klasik:
+     Substitusi (S)  :    60  (30.3% dari N)
+     Delesi     (D)  :     5  (2.5% dari N)
+     Insersi    (I)  :     8  (4.0% dari N)
+     Total Error     :    73
+
+  Insight Soft WER:
+     60 substitusi dihukum penuh oleh WER Klasik
+     Pengurangan penalti efektif: 13.6 poin (23%)
+
+  Distribusi Kualitas:
+     Baik                 2x  **
+     Cukup                2x  **
+     Sangat Baik          1x  *
+
+======================================================================
+  [AKUMULASI GLOBAL]
+======================================================================
+  Kalimat   : 10
+  Kata (N)  : 327
+  Char (N)  : 2134
+
+  +--------------------------------------------------+
+  |  METRIK               |  NILAI    |  %           |
+  +--------------------------------------------------+
+  |  WER Klasik (biner)    |    0.3272  |     32.7%    |
+  |  WER Soft (berbobot)   |    0.2111  |     21.1%    |
+  |  WER Soft + Fonetik    |    0.1994  |     19.9%    |
+  |  CharWER               |    0.0815  |      8.2%    |
+  |  TER (avg)             |    0.3181  |     31.8%    |
+  +--------------------------------------------------+
+
+  Breakdown Error Klasik:
+     Substitusi (S)  :    90  (27.5% dari N)
+     Delesi     (D)  :     7  (2.1% dari N)
+     Insersi    (I)  :    10  (3.1% dari N)
+     Total Error     :   107
+
+  Insight Soft WER:
+     90 substitusi dihukum penuh oleh WER Klasik
+     Pengurangan penalti efektif: 21.0 poin (23%)
+
+  Distribusi Kualitas:
+     Baik                 4x  ****
+     Cukup                3x  ***
+     Sangat Baik          3x  ***
+
+======================================================================
+  PERBANDINGAN FASIH vs KURANG FASIH
+======================================================================
+  METRIK                           Fasih    Kurang Fasih         Delta
+  ------------------------------------------------------------------
+  WER Klasik                     26.4%           36.9%      +10.5%
+  WER Soft (berbobot)            17.5%           23.5%       +5.9%
+  WER Soft + Fonetik             17.0%           22.9%       +6.0%
+  CharWER                         7.0%            8.8%       +1.8%
+  TER                            26.3%           37.3%      +11.0%
+  ------------------------------------------------------------------
+  Delta (+) = Kurang Fasih lebih tinggi error-nya
+
+======================================================================
+  DETAIL PER KALIMAT
+======================================================================
+
+  >> FASIH
+  path                                 N   WER Kl.  WER Soft  +Fonetik  CharWER     TER  Kualitas
+  --------------------------------------------------------------------
+  gung wah.mp3                        41     12.2%      5.1%      5.1%     4.0%   12.2%  Sangat Baik
+  Nanda.mp3                           30     53.3%     42.1%     42.1%    17.0%   55.0%  Cukup
+  panji.mp3                           10     20.0%     11.0%     11.0%     7.3%   20.0%  Baik
+  pak nyoman.mp3                      22     13.6%      3.4%      3.4%     2.0%   13.6%  Sangat Baik
+  Wilwa.mp3                           26     30.8%     23.1%     23.1%     7.6%   30.8%  Baik
+
+  >> KURANG FASIH
+  path                                 N   WER Kl.  WER Soft  +Fonetik  CharWER     TER  Kualitas
+  --------------------------------------------------------------------
+  kecap.mp3                           14      7.1%      0.9%      0.9%     1.0%    7.1%  Sangat Baik
+  Manik.mp3                          129     35.7%     22.8%     21.2%     8.8%   36.0%  Baik
+  Mirah Pradnya.mp3                   20     40.0%     23.8%     23.8%     8.7%   40.0%  Baik
+  Semaya.mp3                          15     53.3%     40.0%     40.0%    15.3%   53.3%  Cukup
+  triasta.mp3                         20     50.0%     30.6%     28.8%    10.2%   50.0%  Cukup
+
+======================================================================
+  ANALISIS ERROR KATA -- Fasih (2 Terburuk)
+======================================================================
+
+  [Fasih/Nanda.mp3]
+     WER Klasik: 53.3%  WER Soft: 42.1%  CharWER: 17.0%
+     Substitusi (sim karakter):
+       [#######...]  kel                -> ke                  sim=0.67  penalti=0.50
+       [########..]  kije               -> kija                sim=0.75  penalti=0.50
+       [###.......]  ooo                -> oh                  sim=0.33  penalti=1.00
+       [##........]  buk                -> nebu                sim=0.25  penalti=1.00
+       [########..]  mejalan            -> majalang            sim=0.75  penalti=0.50
+       [#####.....]  ke                 -> ka                  sim=0.50  penalti=1.00
+
+  [Fasih/Wilwa.mp3]
+     WER Klasik: 30.8%  WER Soft: 23.1%  CharWER: 7.6%
+     Substitusi (sim karakter):
+       [########..]  nglanturang        -> lanturang           sim=0.82  penalti=0.50
+       [########..]  ngaturang          -> laturang            sim=0.78  penalti=0.50
+       [..........]  jali               -> suas                sim=0.00  penalti=1.00
+       [..........]  om                 -> tes                 sim=0.00  penalti=1.00
+       [#.........]  swastyastu         -> tuk                 sim=0.10  penalti=1.00
+       [########..]  puspa              -> pusva               sim=0.80  penalti=0.50
+
+======================================================================
+  ANALISIS ERROR KATA -- Kurang Fasih (2 Terburuk)
+======================================================================
+
+  [Kurang Fasih/Semaya.mp3]
+     WER Klasik: 53.3%  WER Soft: 40.0%  CharWER: 15.3%
+     Substitusi (sim karakter):
+       [########..]  sukma              -> suksma              sim=0.83  penalti=0.50
+       [######....]  uratiyang          -> tiang               sim=0.56  penalti=1.00
+       [#######...]  druine             -> duiné               sim=0.67  penalti=0.50
+       [#######...]  titiang            -> didiang             sim=0.71  penalti=0.50
+       [#######...]  parama             -> para                sim=0.67  penalti=0.50
+       [######....]  santhi             -> masanti             sim=0.57  penalti=1.00
+
+  [Kurang Fasih/triasta.mp3]
+     WER Klasik: 50.0%  WER Soft: 30.6%  CharWER: 10.2%
+     Substitusi (sim karakter):
+       [########..]  sisiane            -> sisnyane            sim=0.75  penalti=0.50
+       [########..]  sayaga             -> sayagi              sim=0.83  penalti=0.50
+       [########..]  masekolah          -> sekolah             sim=0.78  penalti=0.50
+       [########..]  bapak              -> bapa                sim=0.80  penalti=0.50
+       [#########.]  pelajaran          -> plajaran            sim=0.89  penalti=0.11
+       [########..]  rahina             -> lahina              sim=0.83  penalti=0.50
+
+  Laporan lengkap disimpan ke: laporan_advanced_wer_balinese.csv
+
+======================================================================
+  Selesai.
+======================================================================
+
+──────────────────────────────────────────────────────────────────────
+  ► Memproses Whisper Unfinetuned (original)...
+
+  10 kalimat siap dievaluasi.
+
+
+======================================================================
+  [MODEL: Whisper Unfinetuned (Original)]
+======================================================================
+
+======================================================================
+  [KELOMPOK: Fasih]
+======================================================================
+  Kalimat   : 5
+  Kata (N)  : 129
+  Char (N)  : 796
+
+  +--------------------------------------------------+
+  |  METRIK               |  NILAI    |  %           |
+  +--------------------------------------------------+
+  |  WER Klasik (biner)    |    0.7054  |     70.5%    |
+  |  WER Soft (berbobot)   |    0.5049  |     50.5%    |
+  |  WER Soft + Fonetik    |    0.4798  |     48.0%    |
+  |  CharWER               |    0.2249  |     22.5%    |
+  |  TER (avg)             |    0.6854  |     68.5%    |
+  +--------------------------------------------------+
+
+  Breakdown Error Klasik:
+     Substitusi (S)  :    74  (57.4% dari N)
+     Delesi     (D)  :    13  (10.1% dari N)
+     Insersi    (I)  :     4  (3.1% dari N)
+     Total Error     :    91
+
+  Insight Soft WER:
+     74 substitusi dihukum penuh oleh WER Klasik
+     Pengurangan penalti efektif: 8.9 poin (12%)
+
+  Distribusi Kualitas:
+     Buruk                3x  ***
+     Cukup                2x  **
+
+======================================================================
+  [KELOMPOK: Kurang Fasih]
+======================================================================
+  Kalimat   : 5
+  Kata (N)  : 198
+  Char (N)  : 1338
+
+  +--------------------------------------------------+
+  |  METRIK               |  NILAI    |  %           |
+  +--------------------------------------------------+
+  |  WER Klasik (biner)    |    0.6061  |     60.6%    |
+  |  WER Soft (berbobot)   |    0.3888  |     38.9%    |
+  |  WER Soft + Fonetik    |    0.4268  |     42.7%    |
+  |  CharWER               |    0.1450  |     14.5%    |
+  |  TER (avg)             |    0.6290  |     62.9%    |
+  +--------------------------------------------------+
+
+  Breakdown Error Klasik:
+     Substitusi (S)  :   106  (53.5% dari N)
+     Delesi     (D)  :     6  (3.0% dari N)
+     Insersi    (I)  :     8  (4.0% dari N)
+     Total Error     :   120
+
+  Insight Soft WER:
+     106 substitusi dihukum penuh oleh WER Klasik
+     Pengurangan penalti efektif: 29.0 poin (27%)
+
+  Distribusi Kualitas:
+     Cukup                3x  ***
+     Sangat Baik          1x  *
+     Sangat Buruk         1x  *
+
+======================================================================
+  [AKUMULASI GLOBAL]
+======================================================================
+  Kalimat   : 10
+  Kata (N)  : 327
+  Char (N)  : 2134
+
+  +--------------------------------------------------+
+  |  METRIK               |  NILAI    |  %           |
+  +--------------------------------------------------+
+  |  WER Klasik (biner)    |    0.6453  |     64.5%    |
+  |  WER Soft (berbobot)   |    0.4346  |     43.5%    |
+  |  WER Soft + Fonetik    |    0.4533  |     45.3%    |
+  |  CharWER               |    0.1748  |     17.5%    |
+  |  TER (avg)             |    0.6572  |     65.7%    |
+  +--------------------------------------------------+
+
+  Breakdown Error Klasik:
+     Substitusi (S)  :   180  (55.0% dari N)
+     Delesi     (D)  :    19  (5.8% dari N)
+     Insersi    (I)  :    12  (3.7% dari N)
+     Total Error     :   211
+
+  Insight Soft WER:
+     180 substitusi dihukum penuh oleh WER Klasik
+     Pengurangan penalti efektif: 37.9 poin (21%)
+
+  Distribusi Kualitas:
+     Buruk                3x  ***
+     Cukup                5x  *****
+     Sangat Baik          1x  *
+     Sangat Buruk         1x  *
+
+======================================================================
+  PERBANDINGAN FASIH vs KURANG FASIH
+======================================================================
+  METRIK                           Fasih    Kurang Fasih         Delta
+  ------------------------------------------------------------------
+  WER Klasik                     70.5%           60.6%       -9.9%
+  WER Soft (berbobot)            50.5%           38.9%      -11.6%
+  WER Soft + Fonetik             48.0%           42.7%       -5.3%
+  CharWER                        22.5%           14.5%       -8.0%
+  TER                            68.5%           62.9%       -5.6%
+  ------------------------------------------------------------------
+  Delta (+) = Kurang Fasih lebih tinggi error-nya
+
+======================================================================
+  DETAIL PER KALIMAT
+======================================================================
+
+  >> FASIH
+  path                                 N   WER Kl.  WER Soft  +Fonetik  CharWER     TER  Kualitas
+  --------------------------------------------------------------------
+  gung wah.mp3                        41     65.8%     48.1%     48.1%    17.4%   65.8%  Cukup
+  Nanda.mp3                           30     73.3%     58.3%     58.3%    27.0%   73.3%  Buruk
+  panji.mp3                           10     50.0%     31.0%     31.0%    14.7%   50.0%  Cukup
+  pak nyoman.mp3                      22     72.7%     46.2%     46.2%    30.9%   72.7%  Buruk
+  Wilwa.mp3                           26     80.8%     56.2%     56.2%    22.2%   80.8%  Buruk
+
+  >> KURANG FASIH
+  path                                 N   WER Kl.  WER Soft  +Fonetik  CharWER     TER  Kualitas
+  --------------------------------------------------------------------
+  kecap.mp3                           14     14.3%      8.0%      8.0%     4.9%   14.3%  Sangat Baik
+  Manik.mp3                          129     58.1%     35.7%     34.4%    13.1%   58.5%  Cukup
+  Mirah Pradnya.mp3                   20     65.0%     38.6%     38.6%    16.7%   65.0%  Cukup
+  Semaya.mp3                          15    106.7%     86.7%     86.7%    31.6%  106.7%  Sangat Buruk
+  triasta.mp3                         20     70.0%     45.7%     45.7%    16.1%   70.0%  Cukup
+
+======================================================================
+  ANALISIS ERROR KATA -- Fasih (2 Terburuk)
+======================================================================
+
+  [Fasih/Wilwa.mp3]
+     WER Klasik: 80.8%  WER Soft: 56.2%  CharWER: 22.2%
+     Substitusi (sim karakter):
+       [#######...]  ainggih            -> aingeh              sim=0.71  penalti=0.50
+       [#########.]  sadurung           -> sedurung            sim=0.88  penalti=0.12
+       [########..]  nglanturang        -> lanturang           sim=0.82  penalti=0.50
+       [##........]  kapertama          -> nyering             sim=0.22  penalti=1.00
+       [####......]  ngiring            -> lanturang           sim=0.44  penalti=1.00
+       [##........]  ngaturang          -> penganjal           sim=0.22  penalti=1.00
+
+  [Fasih/Nanda.mp3]
+     WER Klasik: 73.3%  WER Soft: 58.3%  CharWER: 27.0%
+     Substitusi (sim karakter):
+       [..........]  kel                -> gos                 sim=0.00  penalti=1.00
+       [####......]  kije               -> kelkinja            sim=0.38  penalti=1.00
+       [#######...]  gus                -> gos                 sim=0.67  penalti=0.50
+       [###.......]  ooo                -> oh                  sim=0.33  penalti=1.00
+       [..........]  ne                 -> rumah               sim=0.00  penalti=1.00
+       [###.......]  buk                -> ebu                 sim=0.33  penalti=1.00
+
+======================================================================
+  ANALISIS ERROR KATA -- Kurang Fasih (2 Terburuk)
+======================================================================
+
+  [Kurang Fasih/Semaya.mp3]
+     WER Klasik: 106.7%  WER Soft: 86.7%  CharWER: 31.6%
+     Substitusi (sim karakter):
+       [###.......]  ida                -> dan                 sim=0.33  penalti=1.00
+       [#####.....]  dane               -> yang                sim=0.50  penalti=1.00
+       [########..]  sareng             -> sarang              sim=0.83  penalti=0.50
+       [########..]  sami               -> sammi               sim=0.80  penalti=0.50
+       [######....]  tiang              -> yang                sim=0.60  penalti=0.50
+       [##........]  sukma              -> urat                sim=0.20  penalti=1.00
+
+  [Kurang Fasih/triasta.mp3]
+     WER Klasik: 70.0%  WER Soft: 45.7%  CharWER: 16.1%
+     Substitusi (sim karakter):
+       [###.......]  sisiane            -> ini                 sim=0.29  penalti=1.00
+       [####......]  sami               -> samisampun          sim=0.40  penalti=1.00
+       [###.......]  sampun             -> saya                sim=0.33  penalti=1.00
+       [###.......]  sayaga             -> dijagi              sim=0.33  penalti=1.00
+       [##........]  jagi               -> mas                 sim=0.25  penalti=1.00
+       [########..]  masekolah          -> sekolah             sim=0.78  penalti=0.50
+
+  Laporan lengkap disimpan ke: laporan_advanced_wer_unfinetuned.csv
+
+======================================================================
+  Selesai.
+======================================================================
+
+======================================================================
+  PERBANDINGAN MODEL: Balinese vs Unfinetuned (GLOBAL)
+======================================================================
+  METRIK                          Balinese     Unfinetuned         Delta   Improv.
+  --------------------------------------------------------------------------------
+  WER Klasik                         32.7%           64.5%        +31.8%    +49.3%
+  WER Soft (berbobot)                21.1%           43.5%        +22.3%    +51.4%
+  WER Soft + Fonetik                 19.9%           45.3%        +25.4%    +56.0%
+  CharWER                             8.2%           17.5%         +9.3%    +53.4%
+  TER                                31.8%           65.7%        +33.9%    +51.6%
+  --------------------------------------------------------------------------------
+  Delta (+) = Unfinetuned lebih tinggi error-nya (fine-tuning berhasil menurunkan)
+  Improv.   = persentase penurunan error dari Unfinetuned ke Balinese
+
+======================================================================
+  Semua laporan berhasil disimpan.
+======================================================================

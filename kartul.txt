@@ -1,0 +1,247 @@
+0Pengembangan Prototype Automatic Speech Recognition (ASR) OpenAI Whisper Berbahasa Bali berbasis Finetune
+
+
+
+
+ 
+
+
+Pembina:
+I Gusti Ngurah Putra Arijaya, S.Pd.
+
+Nama Anggota:
+I Gede Ananda Pradnyana		16/XI A3
+I Gede Exel Dwija Putra		17/XI A3
+I Made Bagus Bima Baskara		09/XI A6
+
+
+
+
+
+
+
+
+
+SMA NEGERI 3 DENPASAR
+2026/2027 
+ 
+KATA PENGANTAR
+
+
+
+Puji syukur kami panjatkan ke hadirat Tuhan Yang Maha Esa, Ida Sang Hyang Widhi Wasa, karena atas asung kerta wara nugraha-Nya, kami dapat menyelesaikan karya tulis ilmiah yang berjudul "Pengembangan Prototype Automatic Speech Recognition (ASR) OpenAI Whisper Berbahasa Bali berbasis Pra-latih" tepat pada waktunya. Karya tulis ini disusun sebagai bentuk dedikasi kami dalam mengeksplorasi potensi kecerdasan buatan untuk melestarikan kekayaan budaya lokal, khususnya Bahasa Bali, di tengah pesatnya arus digitalisasi global yang sering kali meninggalkan bahasa-bahasa daerah dalam ekosistem teknologi modern.
+Penyelesaian karya tulis ini merupakan hasil kerja keras dan kolaborasi yang tidak lepas dari bantuan, bimbingan, serta dukungan tulus dari berbagai pihak. Kami ingin menyampaikan apresiasi dan terima kasih yang mendalam kepada Bapak I Gusti Ngurah Putra Arijaya, S.Pd selaku guru pembimbing kami di SMAN 3 Denpasar, yang telah memberikan arahan teknis serta masukan kritis yang sangat berharga selama proses penelitian. Dukungan serupa juga kami sampaikan kepada kepala sekolah, keluarga, serta rekan-rekan seperjuangan yang senantiasa memberikan motivasi dan doa, sehingga hambatan teknis yang kami temui selama pengembangan prototype ini dapat teratasi dengan baik.
+Kami menyadari sepenuhnya bahwa sebagai sebuah penelitian awal, purwarupa dan karya tulis ini masih memiliki banyak ruang untuk pengembangan lebih lanjut dan jauh dari kata sempurna. Keterbatasan dataset serta sumber daya komputasi menjadi tantangan tersendiri bagi kami dalam mengoptimalkan performa model. Oleh karena itu, kami sangat terbuka terhadap kritik dan saran yang membangun dari para pembaca demi penyempurnaan riset ini di masa mendatang. Akhir kata, besar harapan kami agar karya tulis ini dapat memberikan manfaat nyata, memperkaya literatur teknologi bahasa daerah, dan menginspirasi lebih banyak inovasi dalam menjaga kelestarian Bahasa Bali di era kecerdasan buatan.
+
+
+
+Denpasar, 1 Januari  2026
+Tim Horizon 
+DAFTAR ISI
+	
+
+Kata Pengantar	i
+Daftar Isi	ii
+
+Bab I Pendahuluan	2
+1.1	Latar Belakang	2
+1.2	Rumusan Masalah	3
+1.3	Tujuan	3
+1.4	Manfaat Penelitian	3
+BAB II Metode penelitian	4
+2.1 Jenis dan Pendekatan Penelitian	4
+2.2 Waktu dan Tempat Penelitian	4
+2.3 Metode Penelitian	4
+2.4 Populasi dan Sampel Penelitian	4
+2.5 Istrumen Penelitian	4
+2.6 Variable	4
+2.7 Indikator Penelitian	5
+2.8 Prosedur Penelitian	5
+2.9 Tahapan Penelitian	5
+2.10 Teknik Analisis Data	5
+Bab III Hasil dan Pembahasan	5
+3.1 Hasil	6
+3.2 Hasil Validation Loss	6
+3.3 Hasil WER(Word Error Rate)	6
+3.4 Hasil Uji Lapangan	6
+3.5 Pembahasan	7
+Bab IV Simpulan dan Saran	7
+
+Daftar Pustaka	7 
+Pengembangan Prototype Automatic Speech Recognition (ASR) OpenAI Whisper Berbahasa Bali berbasis Finetune
+
+Peneliti: I Gede Ananda Pradnyana, I Gede Excel Dwija Putra, I Made Bagus Bima Baskara
+
+Pembina: I  Gusti Ngurah Putra Arijaya, S.Pd.
+e-mail: anandapradnyana68@gmail.com, exceldwija2005@gmail.com, madebagusbima@gmail.com
+
+SMA NEGERI 3 DENPASAR
+2025
+
+ABSTRAK
+Tujuan penelitian ini adalah untuk menjembatani kesenjangan teknologi bahasa daerah dengan mengembangkan purwarupa (prototype) sistem Automatic Speech Recognition (ASR) Bahasa Bali yang mampu mentranskripsikan input suara menjadi teks menggunakan arsitektur model OpenAI Whisper. Jenis penelitian ini adalah penelitian eksperimental terapan (applied experimental research) dengan pendekatan Research and Development (R&D). Teknik pengumpulan data dilakukan melalui perekaman primer dari penutur asli (native speaker) serta ekstraksi sekunder melalui web scraping untuk mendapatkan data audio dan takarir dari platform media digital. Pengembangan sistem dilakukan dengan menerapkan teknik fine-tuning pada model pra-latih OpenAI Whisper menggunakan dataset yang telah melalui tahap pra-pemrosesan standar. Indikator keberhasilan model diukur menggunakan metrik Word Error Rate (WER) yang membandingkan hasil transkripsi mesin terhadap transkripsi referensi asli (ground truth). Teknik analisis data yang digunakan adalah deskriptif-kuantitatif terhadap performa model yang telah dilatih, di mana hasil penelitian menunjukkan bahwa proses fine-tuning berhasil mengoptimalkan parameter model Whisper untuk mengenali pola fonetik spesifik Bahasa Bali, sehingga menghasilkan sistem ASR yang dapat menjadi landasan bagi upaya revitalisasi dan dokumentasi bahasa lisan di era digital.
+Kata kunci: Automatic Speech Recognition (ASR), Bahasa Bali, OpenAI Whisper, Fine-tuning, Revitalisasi Bahasa.
+
+ABSTRACT
+The objective of this study is to bridge the technological gap in regional languages by developing a prototype of an Automatic Speech Recognition (ASR) system for the Balinese language capable of transcribing voice input into text using the OpenAI Whisper model architecture. This study is classified as applied experimental research employing a Research and Development (R&D) approach. Data collection was conducted through primary recordings from native speakers as well as secondary extraction via web scraping to obtain audio and subtitle data from digital media platforms. System development was carried out by applying fine-tuning techniques to the pre-trained OpenAI Whisper model using a dataset that had undergone standard pre-processing. Model performance was evaluated using the Word Error Rate (WER) metric, which compares machine-generated transcriptions against the original reference transcriptions (ground truth). The data analysis technique used is descriptive-quantitative analysis of the trained model’s performance, where the research results indicate that the fine-tuning process successfully optimized the Whisper model’s parameters to recognize specific phonetic patterns of the Balinese language, thereby producing an ASR system that can serve as a foundation for efforts to revitalize and document spoken languages in the digital age.
+
+Keywords: Automatic Speech Recognition (ASR), Balinese Language, OpenAI Whisper, Fine-tuning, Language Revitalization.
+
+ 
+A.	PENDAHULUAN
+A.1 Latar Belakang
+Perkembangan teknologi kecerdasan buatan (Artificial Intelligence atau AI) dalam dekade terakhir telah mengubah lanskap interaksi antara manusia dan komputer secara fundamental (Zaenudin & Riyan, 2024). Salah satu cabang AI yang paling berkembang pesat adalah Natural Language Processing (NLP), khususnya dalam bidang Automatic Speech Recognition (ASR) atau pengenalan wicara otomatis. Teknologi ASR memungkinkan mesin untuk memproses, memecahkan kode, dan mentranskripsikan ucapan manusia menjadi teks secara real-time. Menurut Jurafsky & Martin (2023), kemajuan arsitektur Deep Learning, seperti model Transformer, telah meningkatkan akurasi sistem ASR secara signifikan, menjadikannya standar dalam aplikasi modern seperti asisten virtual hingga fitur aksesibilitas bagi penyandang disabilitas.
+Namun, kemajuan teknologi bahasa ini tidak terdistribusi secara merata. Sebagian besar pengembangan teknologi ASR saat ini masih terpusat pada bahasa-bahasa global dengan sumber daya tinggi (high-resource languages). Sebaliknya, bahasa daerah termasuk Bahasa Bali, sering kali tergolong sebagai low-resource languages karena minimnya ketersediaan dataset digital yang terstruktur. Kesenjangan teknologi ini menciptakan ancaman nyata berupa marginalisasi digital. Fenomena ini sejalan dengan konsep Digital Language Death, di mana bahasa yang tidak mampu bertransformasi ke dalam format digital akan kehilangan fungsionalitasnya di masa depan (Kornai, 2013). Sebagaimana dipertegas oleh Adilia & Sukma (2024), kegagalan mengintegrasikan bahasa daerah ke dalam teknologi modern merupakan langkah awal menuju kepunahan bahasa di era digital, karena bahasa tersebut akan kehilangan relevansi komunikatif di mata generasi Digital Native.
+Bahasa Bali sendiri merupakan bahasa daerah dengan struktur linguistik yang kompleks, termasuk sistem tingkatan bahasa (Sor Singgih Basa). Hingga saat ini, upaya digitalisasi telah dimulai melalui pengembangan kamus digital dan papan ketik aksara Bali, yang oleh Larasanti dkk. (2024) disebut sebagai bentuk nyata revitalisasi budaya di abad ke-21. Meskipun demikian, terdapat celah besar dalam pengembangan teknologi pemrosesan suara (ASR) untuk Bahasa Bali. Ketiadaan sistem ASR yang mumpuni bukan sekadar masalah teknis, melainkan hambatan dalam pendokumentasian bahasa lisan secara masif. Tanpa dukungan ASR, upaya konservasi bahasa akan tetap berjalan lambat dan terbatas pada teks statis, sehingga gagal menangkap dinamika bahasa lisan yang menjadi inti dari pelestarian budaya (Bird, 2020).
+	Membangun sistem ASR dari nol (scratch) untuk bahasa dengan sumber daya terbatas memiliki tantangan besar. Pratama dan Amrullah (2024) menyoroti bahwa "Tantangan terbesar dalam ASR bahasa daerah bukanlah algoritma, melainkan ketersediaan data audio yang teranotasi secara berkualitas." Oleh karena itu, untuk mengatasi tingginya biaya komputasi dan masifnya kebutuhan data latih, pendekatan Transfer Learning menggunakan model pra-latih (pre-trained models) menjadi solusi yang paling efisien. OpenAI Whisper hadir sebagai salah satu model state-of-the-art yang dilatih menggunakan 680.000 jam data audio multibahasa. Dalam publikasinya, Radford dkk. (2022) menjelaskan bahwa keunggulan utama Whisper terletak pada kemampuannya untuk melakukan generalisasi lintas bahasa tanpa memerlukan struktur fonetik yang kaku dari awal, memberikannya keandalan yang kuat bahkan pada bahasa yang tidak dominan dalam data latihnya.
+Berdasarkan paparan tersebut, penelitian ini bertujuan untuk menjembatani kesenjangan teknologi bahasa daerah dengan mengembangkan sebuah purwarupa (prototype) sistem Automatic Speech Recognition Bahasa Bali. Pengembangan ini dilakukan melalui proses fine-tuning pada model OpenAI Whisper menggunakan dataset audio berbahasa Bali yang dikurasi secara spesifik. Penelitian ini diharapkan tidak hanya menghasilkan sebuah alat teknologi tepat guna, tetapi juga menjadi landasan akademis bagi upaya revitalisasi dan pelestarian Bahasa Bali melalui adaptasi kecerdasan buatan.
+
+A.2 Rumusan Masalah
+	Berdasarkan latar belakang tersebut, dapat dirumuskan bahwa pengembangan teknologi Automatic Speech Recognition (ASR) untuk Bahasa Bali merupakan langkah untuk menyelaraskan bahasa daerah dengan ekosistem digital saat ini. Kesenjangan antara bahasa dengan sumber daya tinggi (high-resource) dan rendah (low-resource) seperti Bahasa Bali perlu dijembatani agar dokumentasi bahasa lisan tetap berjalan optimal. Melalui pemanfaatan model OpenAI Whisper dan teknik fine-tuning, diharapkan sistem dapat mengenali pola fonetik Bahasa Bali meskipun terdapat keterbatasan dataset awal. Dari rumusan masalah tersebut, muncul pertanyaan penelitian sebagai berikut:
+A.2.1 Bagaimana rancang bangun purwarupa (prototype) ASR Bahasa Bali yang mampu mentranskripsikan input suara menjadi teks menggunakan arsitektur OpenAI Whisper? 
+A.2.2 Bagaimana performa dan tingkat akurasi model hasil fine-tuning dalam mentranskripsikan suara Bahasa Bali berdasarkan metrik Word Error Rate (WER)? 
+A.2.3 Bagaimana kontribusi purwarupa ASR ini terhadap upaya dokumentasi dan pelestarian Bahasa Bali di era digital? 
+
+A.3 Tujuan
+Adapun tujuan penelitian ini yaitu:
+A.3.1 Untuk mengembangkan Purwarupa (Prototype) ASR Bahasa Bali Merancang dan membangun sebuah sistem Automatic Speech Recognition (ASR) sederhana yang mampu mentranskripsikan input suara Bahasa Bali menjadi teks dengan memanfaatkan arsitektur model OpenAI Whisper.
+A.4 Manfaat Penelitian
+Adapun manfaat penelitian ini meliputi: 
+A.4.1 Manfaat teoritis, menjadi referensi akademis bagi penelitian selanjutnya yang ingin mengembangkan teknologi serupa untuk bahasa daerah lain di Indonesia.
+A.4.2 Manfaat praktis, bagi Pelestarian Budaya: Mendukung upaya dokumentasi dan digitalisasi Bahasa Bali agar tetap relevan dan dapat beradaptasi dengan kemajuan teknologi digital.
+
+B.	METODE PENELITIAN
+B.1 Jenis dan Pendekatan Penelitian 
+Penelitian ini merupakan penelitian eksperimental terapan (applied experimental research) yang menggunakan pendekatan Research and Development (R&D). Menurut Sugiyono (2019), metode penelitian R&D adalah metode yang digunakan untuk menghasilkan produk tertentu dan menguji keefektifan produk tersebut. Dalam konteks penelitian ini, fokus utama adalah merancang, melatih, dan menguji sebuah purwarupa (prototype) Automatic Speech Recognition (ASR) untuk Bahasa Bali. Pengembangan dilakukan dengan menerapkan teknik fine-tuning pada arsitektur model pra-latih OpenAI Whisper versi Small
+B.2 Waktu dan Tempat Penelitian
+Penelitian dan pengembangan purwarupa ASR ini dilakukan secara komputasional (in-silico) dengan memanfaatkan layanan komputasi awan (cloud computing) maupun perangkat keras lokal. Seluruh rangkaian kegiatan yang mencakup proses perancangan, pelatihan model, hingga tahap pengujian dilaksanakan di lingkungan SMA Negeri 3 Denpasar serta dilakukan secara mandiri oleh tim peneliti. Adapun penelitian ini berlangsung selama periode penyusunan karya tulis ilmiah, terhitung mulai tanggal 29 Desember 2025 sampai dengan 10 April 2026.
+
+B.3 Metode Pengumpulan Data
+Penelitian eksperimental ini mengintegrasikan data primer dari rekaman penutur asli dan data sekunder hasil web scraping dari Balinese Dictionary. Pelatihan model OpenAI Whisper versi Small dilakukan melalui teknik fine-tuning pada platform Kaggle menggunakan GPU Nvidia Tesla P100 dengan dukungan pustaka PyTorch dan Librosa. Performa sistem dievaluasi menggunakan metrik Word Error Rate (WER) melalui uji transkripsi langsung terhadap rekaman pidato bahasa Bali untuk mengukur akurasi model secara riil.
+
+B.4 Populasi dan Sampel Penelitian
+Dataset penelitian terdiri dari 1.187 berkas audio berformat .wav dengan durasi total 2002,44 detik (33 menit 22 detik). Seluruh populasi data tersebut dialokasikan sebagai data latih (100%) untuk mengoptimalkan parameter model melalui proses fine-tuning. Sampel pengujian diambil secara eksternal berupa rekaman pidato penutur asli yang belum pernah diproses sebelumnya guna memvalidasi kemampuan generalisasi model terhadap input suara baru.
+
+B.5 Instrumen Penelitian
+Instrumen penelitian ini mencakup perangkat keras berupa komputer dengan dukungan GPU Nvidia Tesla P100 melalui platform Kaggle untuk akselerasi komputasi deep learning. Perangkat lunak yang digunakan meliputi Visual Studio Code, bahasa pemrograman Python, serta pustaka pendukung seperti PyTorch untuk pelatihan model, Librosa untuk pemrosesan sinyal audio, dan modul otomatisasi web untuk kebutuhan ekstraksi data. Selain itu, performa dan tingkat keberhasilan sistem dievaluasi menggunakan metrik Word Error Rate (WER) dengan membandingkan hasil transkripsi mesin terhadap transkripsi referensi asli (ground truth).
+
+B.6 Variabel
+	Variabel bebas dalam penelitian ini adalah penerapan teknik fine-tuning pada model pra-latih OpenAI Whisper. Variabel terikat dalam penelitian ini adalah performa atau tingkat akurasi sistem Automatic Speech Recognition (ASR) dalam mentranskripsikan input suara Bahasa Bali menjadi teks, yang diukur menggunakan metrik Word Error Rate (WER).
+	
+B.7 Indikator Penelitian
+B.7.1 Word Error Rate (WER) 
+Word Error Rate (WER) adalah metrik yang digunakan untuk mengevaluasi kinerja model dengan mengukur persentase kesalahan pada tingkat kata, yaitu melalui perbandingan antara hasil transkripsi mesin (hipotesis) terhadap transkripsi referensi asli (ground truth).
+B.7.2 Pengujian Transkripsi Langsung (Uji Model) 
+Pengujian model merupakan tahap evaluasi secara riil terhadap sistem yang telah dilatih, di mana model diuji menggunakan input suara lisan (seperti rekaman pidato bahasa Bali) yang belum pernah diproses sebelumnya untuk memvalidasi kemampuan generalisasinya.
+
+
+B.8 Prosedur Penelitian
+Pengembangan sistem ASR ini dilakukan melalui tahapan sistematis berikut:
+1.	Pra-pemrosesan Data (Data Preprocessing): Audio mentah distandardisasi menjadi format WAV dengan laju sampel (sample rate) 16 kHz berkanal mono. Data teks dibersihkan dari karakter non-alfabetik dan diseragamkan (lowercasing).
+2.	Pelatihan Model (Model Fine-Tuning): Mengoptimalkan parameter pada model OpenAI Whisper menggunakan data latih agar sistem dapat mengenali pola fonetik spesifik Bahasa Bali.
+3.	Pengujian Model (Testing): Mengevaluasi model yang telah dilatih untuk melihat kemampuannya dalam mentranskripsikan audio lisan yang belum pernah diproses sebelumnya.
+
+B.9 Tahapan Penelitian
+	Tahap penelitian yang dilakukan meliputi: (1) Mengumpulkan dataset melalui perekaman primer secara lokal dari penutur asli (native speaker) dan ekstraksi sekunder melalui web scraping dari Balinese Dictionary untuk mendapatkan data audio serta takarir , (2) Melakukan pra-pemrosesan data dengan menstandardisasi audio menjadi format WAV dengan laju sampel 16 kHz berkanal mono, serta membersihkan teks dari karakter non-alfabetik,(3) Melatih dan mengoptimalkan parameter model (fine-tuning) OpenAI Whisper versi Small menggunakan pustaka PyTorch dan Librosa pada platform Kaggle dengan akselerasi GPU Nvidia Tesla P100, (fine-tuning) OpenAI Whisper menggunakan pustaka PyTorch dan Librosa pada platform Kaggle dengan akselerasi GPU Nvidia Tesla P100, (4) Menguji model yang telah dilatih untuk mentranskripsikan input suara baru menggunakan rekaman pidato bahasa Bali, (5) Menganalisis data performa hasil pengujian model secara deskriptif - kuantitatif menggunakan metrik Word Error Rate (WER) serta menarik kesimpulan.
+
+B.10 Teknik Analisis Data
+Teknik analisis data yang digunakan untuk mengevaluasi kinerja model ASR adalah Word Error Rate (WER). WER mengukur persentase kesalahan pada tingkat kata dengan membandingkan hasil transkripsi mesin (hipotesis) terhadap transkripsi referensi asli (ground truth). Perhitungan WER menggunakan rumus berikut:
+   
+
+C.	HASIL DAN PEMBAHASAN
+C.1 Hasil
+Purwarupa Automatic Speech Recognition (ASR) terbukti dapat digunakan sebagai sistem pengenalan wicara otomatis untuk mentranskripsikan input suara Bahasa Bali menjadi teks menggunakan arsitektur model OpenAI Whisper versi Small. Pembuatannya menggunakan proses fine-tuning pada model pra-latih tersebut untuk mengenali pola fonetik spesifik. Model AI ini dilatih sebanyak 1000 sampai 3000 langkah (steps). Berdasarkan proses tersebut, model menunjukkan peningkatan akurasi yang ditandai dengan penurunan metrik Word Error Rate (WER) dari 55,79% pada langkah ke-1000 menjadi 45,75% pada langkah ke-3000, sejalan dengan nilai training loss yang semakin mengecil hingga mencapai angka 0,0019.
+ 
+Gambar 3.1 Diagram Alir Sistem Finetune Whisper
+C1.1 Hasil Training Loss 
+  
+Gambar 3.2 Metrik Training Loss 1000 sampai 3000 epoch
+Garis kurva ini menunjukkan tren penurunan yang tajam dan konsisten, bergerak dari angka 0,028 hingga mengecil ke 0,001. Penurunan ini secara faktual membuktikan bahwa model semakin baik dalam mempelajari dan mengenali pola spesifik dari dataset latih Bahasa Bali.
+	
+C1.2 Hasil Validation Loss
+ 
+Gambar 3.3 Grafik metrik Validation Loss 1000 sampai 3000 epoch
+
+Berbeda dengan training loss, garis kurva ini menunjukkan sedikit tren peningkatan seiring bertambahnya step (bergerak naik perlahan dari 0,59 menjadi 0,67). Dinamika ini adalah fenomena yang sangat umum dalam pelatihan model deep learning, yang mengindikasikan model mulai terlalu fokus menghafal data latih sehingga sedikit lebih rentan saat generalisasi data baru.
+
+	C1.3 Hasil WER(Word Error Rate)
+ 
+Gambar 3.4 Metrik Word Error Rate 1000 sampai 3000 epoch
+
+Kurva ini merupakan representasi dari metrik performa utama. Terlepas dari dinamika validation loss, kurva WER secara nyata menunjukkan pergerakan turun dari tingkat kesalahan 55,79% menuju 46,10%, lalu mulai melandai (stabil) di angka  45,75% pada langkah ke-3000. Pergerakan kurva ini mengonfirmasi bahwa kemampuan fungsional model dalam mentranskripsikan kata telah mengalami .kemajuan yang jelas sebelum akhirnya mencapai titik saturasi (jenuh). Meskipun validation loss menunjukkan sedikit tren peningkatan yang mengindikasikan gejala overfitting ringan, penurunan konsisten pada kurva WER membuktikan bahwa model tetap berhasil mengoptimalkan pemahaman fonetiknya untuk menghasilkan transkripsi yang lebih akurat. 
+		C1.4 Hasil Uji Lapangan
+Pengujian dilakukan terhadap sepuluh responden yang dibagi menjadi dua kelompok, yaitu penutur fasih dan penutur kurang fasih.
+Tabel 3.1 Hasil Uji Lapangan
+Penutur	Responden	WER
+Fasih	F-01
+F-02
+F-03
+F-04
+F-05	12,2%
+53,3%
+20,0%
+13,6%
+30,8%
+Kurang fasih	KF-01
+KF-02
+KF-03
+KF-04
+KF-05	7,1%
+35,7%
+40,0%
+53,3%
+50,0%
+Hasil uji lapangan terhadap 10 responden menunjukkan perbedaan performa antara dua kelompok penutur. Kelompok penutur fasih memperoleh rata-rata WER sebesar 26,4%, sedangkan kelompok penutur kurang fasih memperoleh rata-rata WER sebesar 36,9%, dengan selisih 10,5 poin persentase di antara keduanya.
+
+Pemilihan subjek uji coba yang dibatasi pada 10 orang untuk masing-masing kategori dilakukan secara sengaja untuk membandingkan performa model terhadap dua spektrum kemampuan linguistik yang berbeda. Kategori 'fasih' ditentukan berdasarkan subjek yang memiliki penguasaan fonetik bahasa Bali yang kental, meliputi ketepatan artikulasi pada konsonan retrofleks (seperti perbedaan pelafalan t dan th) serta penggunaan intonasi yang sesuai dengan dialek Bali standar. Sebaliknya, kategori 'kurang fasih' merepresentasikan subjek dengan kecenderungan code-mixing (campur kode) ke bahasa Indonesia dan memiliki artikulasi yang lebih datar atau terpengaruh logat urban, yang mana sering menjadi tantangan bagi model ASR. Fokus pada 10 sampel per kategori ini dianggap telah memadai untuk mengidentifikasi pola kesalahan transkripsi secara mendalam pada pengembangan prototipe tahap awal, sekaligus menjamin proses verifikasi data manual tetap presisi dalam mengukur efisiensi model Transfer Learning pada bahasa dengan sumber daya terbatas (low-resource language).
+C.2 Pembahasan
+C.2.1 Performa Model Fine-Tuning
+Proses fine-tuning model OpenAI Whisper dengan dataset Bahasa Bali berhasil meningkatkan kemampuan transkripsi secara signifikan. Berdasarkan hasil pelatihan, nilai WER turun dari 55,79% pada langkah ke-1000 menjadi 45,75% pada langkah ke-3000, diikuti oleh penurunan training loss dari 0,028 hingga 0,001. Hal ini membuktikan bahwa model secara bertahap berhasil mempelajari pola fonetik spesifik Bahasa Bali melalui proses adaptasi parameter yang berkelanjutan.
+
+C.2.2 Perbandingan Akurasi Penutur Fasih dan Kurang Fasih
+Hasil uji lapangan menunjukkan perbedaan performa yang signifikan antara dua kelompok penutur. Kelompok penutur fasih menghasilkan rata-rata WER sebesar 26,4%, lebih rendah dibandingkan kelompok penutur kurang fasih dengan rata-rata WER sebesar 36,9%, dengan selisih sebesar 10,5 poin persentase. Perbedaan ini mengindikasikan bahwa model lebih akurat dalam mengenali tuturan dengan artikulasi yang jelas dan teratur, sejalan dengan karakteristik data latih yang sebagian besar merepresentasikan pola bicara baku penutur asli.
+
+C.2.3 Analisis Pola Kesalahan Transkripsi
+Berdasarkan analisis terhadap pola kesalahan, ditemukan dua jenis substitusi yang dominan. Pertama, substitusi dengan kemiripan karakter tinggi, seperti kata pelajaran yang ditranskripsi menjadi plajaran (kemiripan 89%) dan sisiane menjadi sisnyane (kemiripan 75%). Pola ini menunjukkan bahwa model sebenarnya telah mendekati jawaban yang benar, namun terkendala oleh variasi fonetik minor yang khas dalam Bahasa Bali. Kedua, substitusi dengan perbedaan signifikan yang lebih banyak ditemukan pada kelompok penutur kurang fasih, yang mengindikasikan model mengalami kesulitan menginterpretasikan pengucapan yang tidak standar atau terganggu oleh noise pada rekaman.
+
+C.2.4 Keterbatasan dan Potensi Pengembangan
+Meskipun menunjukkan kemajuan yang berarti, model ini masih memiliki beberapa keterbatasan. Dataset latih yang berjumlah 1.187 berkas audio dengan durasi total sekitar 33 menit tergolong sangat terbatas untuk kebutuhan pelatihan model bahasa rendah sumber daya (low-resource language). Selain itu, tren kenaikan validation loss dari 0,596 menjadi 0,671 di tengah penurunan WER mengindikasikan adanya gejala overfitting ringan, di mana model mulai kesulitan menggeneralisasi pola di luar data latih. Model juga belum sepenuhnya mampu menangani kompleksitas linguistik Bahasa Bali, termasuk variasi dialek serta sistem tingkatan bahasa Sor Singgih Basa. Pengembangan lebih lanjut dengan memperluas dataset serta menerapkan teknik augmentasi data akan menjadi langkah krusial untuk meningkatkan robustitas model.
+
+C.2.5 Kontribusi terhadap Pelestarian Bahasa Bali
+Penelitian ini membuktikan bahwa teknik fine-tuning pada model pra-latih OpenAI Whisper merupakan pendekatan yang viable untuk mengembangkan sistem ASR bagi bahasa rendah sumber daya seperti Bahasa Bali, bahkan dengan keterbatasan dataset awal. Purwarupa yang dihasilkan dapat menjadi fondasi bagi pengembangan lebih lanjut dalam upaya dokumentasi bahasa lisan Bali, mendukung revitalisasi bahasa daerah, serta mencegah terjadinya digital language death di era kecerdasan buatan.
+
+D.	SIMPULAN DAN SARAN
+D.1 Simpulan
+Berdasarkan hasil penelitian dan pembahasan yang telah diuraikan, dapat ditarik simpulan sebagai berikut.
+Pertama, purwarupa sistem Automatic Speech Recognition (ASR) Bahasa Bali berbasis fine-tuning OpenAI Whisper berhasil dikembangkan dan terbukti mampu mentranskripsikan input suara Bahasa Bali menjadi teks. Proses fine-tuning selama 3.000 langkah dengan dataset 1.187 berkas audio berhasil mengoptimalkan parameter model, yang ditandai dengan penurunan training loss dari 0,028 menjadi 0,001.
+Kedua, performa model yang diukur menggunakan metrik Word Error Rate (WER) menunjukkan peningkatan yang signifikan selama proses pelatihan, yaitu dari 55,79% pada langkah ke-1.000 menjadi 45,75% pada langkah ke-3.000. Pada uji lapangan terhadap penutur asli, model mencapai WER rata-rata global sebesar 32,7%, dengan penutur fasih memperoleh rata-rata WER 26,4% dan penutur kurang fasih 36,9%. Selisih 10,5 poin persentase antara kedua kelompok mengindikasikan bahwa kejelasan artikulasi penutur berpengaruh signifikan terhadap akurasi transkripsi model.
+Ketiga, purwarupa ASR ini membuktikan bahwa pendekatan transfer learning melalui fine-tuning model pra-latih merupakan solusi efisien bagi pengembangan teknologi low-resource language seperti Bahasa Bali. Kontribusi nyata terhadap pelestarian bahasa ditunjukkan melalui kemampuan sistem dalam mengonversi aset lisan menjadi data teks terstruktur secara otomatis, yang menjadi fondasi penting bagi digitalisasi dokumentasi linguistik. Dengan stabilitas performa pada berbagai tingkat kefasihan penutur, purwarupa ini tidak hanya berfungsi sebagai alat bantu transkripsi, tetapi juga sebagai instrumen untuk memetakan dan mengarsipkan variasi fonetik lokal yang berisiko punah. Hal ini memberikan kontribusi konkret dalam mempercepat ketersediaan dataset bahasa Bali yang machine-readable, yang merupakan prasyarat mutlak agar Bahasa Bali tetap relevan dan dapat terintegrasi dengan berbagai ekosistem teknologi AI di masa depan.
+D.2 Saran
+Berdasarkan keterbatasan yang ditemukan dalam penelitian ini, diajukan beberapa saran sebagai berikut.
+Pertama, perluasan dataset latih perlu menjadi prioritas utama pengembangan berikutnya. Dataset sebesar 1.187 berkas audio dengan durasi ±33 menit masih sangat terbatas. Disarankan untuk mengumpulkan minimal 10 jam data audio berkualitas tinggi yang merepresentasikan keberagaman dialek, tingkatan bahasa (Sor Singgih Basa), serta kelompok usia penutur yang lebih luas.
+Kedua, penerapan teknik augmentasi data seperti penambahan noise latar, variasi kecepatan bicara, dan pergeseran pitch perlu dilakukan untuk meningkatkan robustitas model terhadap kondisi rekaman yang beragam, sekaligus mengatasi gejala overfitting ringan yang terdeteksi pada penelitian ini.
+Ketiga, penelitian lanjutan disarankan untuk mengeksplorasi penggunaan arsitektur model Whisper berukuran lebih besar (small atau medium) yang memiliki kapasitas parameter lebih tinggi, serta mempertimbangkan integrasi leksikon fonetik Bahasa Bali khusus untuk meningkatkan pengenalan kosakata yang bersifat unik dan tidak terdapat dalam bahasa lain.
+Keempat, pengujian lapangan sebaiknya diperluas dengan melibatkan lebih banyak responden dari berbagai latar belakang, termasuk penutur lansia yang umumnya menggunakan register bahasa Bali tinggi (Bali Alus), serta penutur muda yang cenderung menggunakan campuran Bahasa Bali dan Indonesia, guna menghasilkan evaluasi yang lebih komprehensif dan representatif.
+
+E.	DAFTAR PUSTAKA
+Adilia, Putri, dan Sukma. 2024. “Integrasi Bahasa Daerah ke dalam Teknologi Modern: Upaya Menghindari Marginalisasi Digital.” Jurnal Komunikasi Global.
+Bird, Steven. 2020. “Decolonising Speech and Language Technology.” Proceedings of the 28th International Conference on Computational Linguistics.
+Budiasti, Ni Wayan. 2026. “Perjalanan Digitalisasi Aksara Bali: Dari Lontar Ke Layar Dalam Konteks Pelestarian Dan Modernisasi Budaya (Studi Tahun 2010-2015).” Widya Sundaram: Jurnal Pendidikan Seni Dan Budaya. Diakses 10 April. https://e-journal.iahn-gdepudja.ac.id/index.php/JWS/article/view/2403.
+Cahyani, Ni Putu Kartika, Ni Kadek Deswita Lestari, Ni Made Marta Kusuma Yanti, dan I Putu Adi Permana Putra. 2026. “PARASALI: ANALISIS MEDIA PEMBELAJARAN BAHASA BALI BERBASIS DIGITAL MELALUI PERSPEKTIF ELECTRONIC GOVERNMENT.” Locus. Diakses 10 April. https://ejournal.unipas.ac.id/index.php/LOCUS/article/view/1973.
+Gholamy, Afshin, dkk. 2018. “Why 80/20 Is Quite Good in Machine Learning: A Theoretical Explanation.” Technical Report: UTEP-CS-18-33. University of Texas at El Paso.
+Jurafsky, Dan, dan James H. Martin. 2026. “Speech and Language Processing (3rd Ed. Draft).” Speech and Language Processing. Diakses 10 April. https://web.stanford.edu/~jurafsky/slp3/.
+Kornai, András. 2013. “Digital Language Death.” PLOS ONE 8 (10). https://doi.org/10.1371/journal.pone.0077056.
+Larasanti, Ni Made Dwi, dkk. 2024. “Revitalisasi Budaya melalui Digitalisasi Aksara dan Bahasa Bali di Abad 21.” Jurnal Kebudayaan dan Sastra.
+Pratama, Riefkyanov Surya Adia, dan Agit Amrullah. 2026. “ANALYSIS OF WHISPER AUTOMATIC SPEECH RECOGNITION PERFORMANCE ON LOW RESOURCE LANGUAGE.” Jurnal Pilar Nusa Mandiri. Diakses 10 April. https://ejournal.nusamandiri.ac.id/index.php/pilar/article/view/4633.
+Radford, Alec, Jong Wook Kim, Tao Xu, Greg Brockman, Christine McLeavey, dan Ilya Sutskever. 2022. “Robust Speech Recognition via Large-Scale Weak Supervision.” arXiv.Org. 6 Desember. https://arxiv.org/abs/2212.04356.
+Sugiyono. 2019. Metode Penelitian Pendidikan (Pendekatan Kuantitatif, Kualitatif, Kombinasi, R&D dan Penelitian Tindakan). Bandung: Alfabeta.
+Zaenudin, Ahmad, dan Riyan. 2024. “Perkembangan Teknologi Kecerdasan Buatan dalam Interaksi Manusia dan Komputer.” Jurnal Teknologi dan Sistem Komputer.
+
+
+
+
+
+
+ 
+
+

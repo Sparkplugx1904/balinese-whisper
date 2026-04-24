@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced WER Evaluator — Balinese ASR</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --surface: #111822;
+    --surface2: #1a2333;
+    --border: #1e2d42;
+    --accent-bal: #00e5ff;
+    --accent-unf: #ff6b35;
+    --accent-gold: #ffd166;
+    --text: #d0dce8;
+    --text-muted: #6b8299;
+    --green: #06d6a0;
+    --red: #ef476f;
+    --yellow: #ffd166;
+    --purple: #a78bfa;
+    --font-mono: 'Space Mono', monospace;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #0d1420 0%, #111822 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .header-title { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.15em; color: var(--text-muted); text-transform: uppercase; }
+  .header-title span { color: var(--accent-bal); }
+  .header-badge { display: flex; gap: 8px; }
+  .badge { font-family: var(--font-mono); font-size: 11px; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.05em; }
+  .badge-bal { background: rgba(0,229,255,0.12); color: var(--accent-bal); border: 1px solid rgba(0,229,255,0.25); }
+  .badge-unf { background: rgba(255,107,53,0.12); color: var(--accent-unf); border: 1px solid rgba(255,107,53,0.25); }
+
+  /* MAIN LAYOUT */
+  .main { max-width: 1400px; margin: 0 auto; padding: 32px; }
+
+  /* COMPARISON HERO */
+  .hero-compare {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px;
+    margin-bottom: 32px; align-items: center;
+  }
+  .hero-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px;
+    position: relative; overflow: hidden;
+  }
+  .hero-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .hero-card.bal::before { background: var(--accent-bal); }
+  .hero-card.unf::before { background: var(--accent-unf); }
+  .hero-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+  .hero-label.bal { color: var(--accent-bal); }
+  .hero-label.unf { color: var(--accent-unf); }
+  .hero-name { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: #fff; }
+  .hero-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .hero-metric { background: var(--surface2); border-radius: 8px; padding: 12px; }
+  .hm-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; font-family: var(--font-mono); }
+  .hm-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; }
+  .hm-val.good { color: var(--green); }
+  .hm-val.bad { color: var(--red); }
+
+  .vs-divider { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .vs-text { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--accent-gold); }
+  .vs-sub { font-size: 10px; color: var(--text-muted); text-align: center; font-family: var(--font-mono); letter-spacing: 0.08em; }
+
+  /* IMPROVEMENT BANNER */
+  .improvement-banner {
+    background: linear-gradient(135deg, rgba(6,214,160,0.08) 0%, rgba(0,229,255,0.05) 100%);
+    border: 1px solid rgba(6,214,160,0.2); border-radius: 10px;
+    padding: 16px 24px; margin-bottom: 32px;
+    display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
+  }
+  .imp-label { font-family: var(--font-mono); font-size: 11px; color: var(--green); text-transform: uppercase; letter-spacing: 0.1em; }
+  .imp-items { display: flex; gap: 20px; flex-wrap: wrap; }
+  .imp-item { display: flex; flex-direction: column; }
+  .imp-item-label { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
+  .imp-item-val { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--green); }
+
+  /* TABS */
+  .section-tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+  .tab-btn {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 10px 18px; border: none;
+    background: transparent; color: var(--text-muted); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent-bal); border-bottom-color: var(--accent-bal); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* GROUP STATS */
+  .groups-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  .group-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .group-title { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-gold); margin-bottom: 14px; }
+  .group-meta { display: flex; gap: 12px; margin-bottom: 14px; }
+  .gmeta-item { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+  .gmeta-item span { color: var(--text); }
+  .metric-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-name { font-size: 12px; color: var(--text-muted); }
+  .metric-val-wrap { display: flex; align-items: center; gap: 10px; }
+  .metric-bar-bg { width: 80px; height: 4px; background: var(--surface2); border-radius: 2px; }
+  .metric-bar { height: 4px; border-radius: 2px; }
+  .metric-bar.bal { background: var(--accent-bal); }
+  .metric-bar.unf { background: var(--accent-unf); }
+  .metric-val { font-family: var(--font-mono); font-size: 13px; font-weight: 700; width: 52px; text-align: right; }
+
+  /* BREAKDOWN */
+  .breakdown-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  .breakdown-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .breakdown-title { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 14px; }
+  .err-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .err-type { font-family: var(--font-mono); font-size: 12px; width: 100px; }
+  .err-bar-wrap { flex: 1; margin: 0 12px; }
+  .err-bar-bg { height: 6px; background: var(--surface2); border-radius: 3px; }
+  .err-bar { height: 6px; border-radius: 3px; transition: width 0.5s; }
+  .err-subst { background: var(--accent-unf); }
+  .err-delet { background: var(--red); }
+  .err-insert { background: var(--purple); }
+  .err-num { font-family: var(--font-mono); font-size: 12px; width: 80px; text-align: right; }
+  .qdist { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .qdist-chip { font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 12px; }
+
+  /* SENTENCE TABLE */
+  .sent-table-wrap { overflow-x: auto; }
+  .sent-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .sent-table th { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+  .sent-table td { padding: 10px 12px; border-bottom: 1px solid rgba(30,45,66,0.5); vertical-align: top; }
+  .sent-table tr:hover td { background: rgba(0,229,255,0.03); cursor: pointer; }
+  .sent-table tr.unf-row:hover td { background: rgba(255,107,53,0.03); }
+  .path-cell { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cat-pill { font-family: var(--font-mono); font-size: 9px; padding: 2px 6px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .cat-fasih { background: rgba(6,214,160,0.12); color: var(--green); border: 1px solid rgba(6,214,160,0.2); }
+  .cat-kurang { background: rgba(255,107,53,0.12); color: var(--accent-unf); border: 1px solid rgba(255,107,53,0.2); }
+  .wer-cell { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
+  .qual-chip { font-family: var(--font-mono); font-size: 9px; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+
+  /* DIFF DETAIL PANEL */
+  .detail-panel {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; margin-top: 8px;
+    display: none;
+  }
+  .detail-panel.open { display: block; animation: fadeIn 0.2s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .detail-section { margin-bottom: 14px; }
+  .detail-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px; }
+  .detail-text { font-size: 13px; line-height: 1.6; color: var(--text); }
+  .diff-tokens { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .tok { font-family: var(--font-mono); font-size: 11px; padding: 2px 6px; border-radius: 4px; }
+  .tok-ok { background: rgba(6,214,160,0.1); color: var(--green); }
+  .tok-sub { background: rgba(255,107,53,0.15); color: var(--accent-unf); text-decoration: underline; }
+  .tok-del { background: rgba(239,71,111,0.15); color: var(--red); text-decoration: line-through; }
+  .tok-ins { background: rgba(167,139,250,0.15); color: var(--purple); }
+  .diff-legend { display: flex; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+  .dl { font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .dl-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* COMPARE PANEL */
+  .compare-table-wrap { overflow-x: auto; }
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .compare-table th { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: center; }
+  .compare-table th:first-child { text-align: left; }
+  .compare-table td { padding: 10px 12px; border-bottom: 1px solid rgba(30,45,66,0.5); text-align: center; font-family: var(--font-mono); font-size: 12px; }
+  .compare-table td:first-child { text-align: left; font-family: var(--font-body); font-size: 12px; color: var(--text-muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .compare-table tr:hover td { background: rgba(255,209,102,0.03); }
+  .delta-better { color: var(--green); font-weight: 700; }
+  .delta-worse { color: var(--red); font-weight: 700; }
+  .val-bal { color: var(--accent-bal); }
+  .val-unf { color: var(--accent-unf); }
+  .section-title { font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* QUALITY COLORS */
+  .q-sempurna { background: rgba(6,214,160,0.15); color: #06d6a0; border: 1px solid rgba(6,214,160,0.25); }
+  .q-sangat-baik { background: rgba(0,229,255,0.12); color: #00e5ff; border: 1px solid rgba(0,229,255,0.2); }
+  .q-baik { background: rgba(167,139,250,0.12); color: #a78bfa; border: 1px solid rgba(167,139,250,0.2); }
+  .q-cukup { background: rgba(255,209,102,0.12); color: #ffd166; border: 1px solid rgba(255,209,102,0.2); }
+  .q-buruk { background: rgba(255,107,53,0.12); color: #ff6b35; border: 1px solid rgba(255,107,53,0.2); }
+  .q-sangat-buruk { background: rgba(239,71,111,0.15); color: #ef476f; border: 1px solid rgba(239,71,111,0.25); }
+
+  /* WER COLOR SCALE */
+  .wer-low { color: var(--green); }
+  .wer-mid { color: var(--yellow); }
+  .wer-high { color: var(--accent-unf); }
+  .wer-vhigh { color: var(--red); }
+
+  .scrollable { max-height: 420px; overflow-y: auto; }
+  .scrollable::-webkit-scrollbar { width: 4px; }
+  .scrollable::-webkit-scrollbar-track { background: var(--surface); }
+  .scrollable::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">⟨ Advanced WER Evaluator ⟩ — <span>Balinese ASR</span></div>
+  <div class="header-badge">
+    <span class="badge badge-bal">Whisper Balinese</span>
+    <span class="badge badge-unf">Whisper Unfinetuned</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- HERO COMPARE -->
+  <div id="hero-compare" class="hero-compare"></div>
+
+  <!-- IMPROVEMENT BANNER -->
+  <div id="improvement-banner" class="improvement-banner"></div>
+
+  <!-- TABS -->
+  <div class="section-tabs">
+    <button class="tab-btn active" onclick="switchTab('compare')">⇌ Perbandingan</button>
+    <button class="tab-btn" onclick="switchTab('balinese')">◈ Whisper Balinese</button>
+    <button class="tab-btn" onclick="switchTab('unfinetuned')">◈ Whisper Unfinetuned</button>
+  </div>
+
+  <!-- TAB: COMPARE -->
+  <div id="tab-compare" class="tab-content active">
+    <div class="section-title">Perbandingan Global & Per Kelompok</div>
+    <div id="compare-groups" class="groups-grid" style="grid-template-columns:1fr 1fr;"></div>
+    <div class="section-title">Perbandingan Per Kalimat</div>
+    <div id="compare-sentences"></div>
+  </div>
+
+  <!-- TAB: BALINESE -->
+  <div id="tab-balinese" class="tab-content">
+    <div class="section-title">Statistik Per Kelompok — Whisper Balinese</div>
+    <div id="bal-groups" class="groups-grid"></div>
+    <div class="section-title">Breakdown Error — Whisper Balinese</div>
+    <div id="bal-breakdown" class="breakdown-grid"></div>
+    <div class="section-title">Detail Per Kalimat — Whisper Balinese</div>
+    <div id="bal-sentences"></div>
+  </div>
+
+  <!-- TAB: UNFINETUNED -->
+  <div id="tab-unfinetuned" class="tab-content">
+    <div class="section-title">Statistik Per Kelompok — Whisper Unfinetuned</div>
+    <div id="unf-groups" class="groups-grid"></div>
+    <div class="section-title">Breakdown Error — Whisper Unfinetuned</div>
+    <div id="unf-breakdown" class="breakdown-grid"></div>
+    <div class="section-title">Detail Per Kalimat — Whisper Unfinetuned</div>
+    <div id="unf-sentences"></div>
+  </div>
+</div>
+
+<script>
+const DATA = {"balinese": {"rows": [{"path": "Kurang Fasih/kecap.mp3", "kategori": "Kurang Fasih", "ref": "waduh basang titiang seduk gati, timpal timpal sinamian ngerayunan nggih titiang ngajeng dumunan seduk.", "hyp": "Waduh..basang titiang seduk gati. Timpal-timpal senamian ngerayunan, nggih? Titiang ngajeng dumunan. Seduk.", "N_kata": 14, "N_char": 102, "wer_klasik": 0.0714, "S_kl": 1, "D_kl": 0, "I_kl": 0, "C_kl": 13, "wer_soft": 0.0089, "err_soft": 0.125, "S_bobot": 0.125, "D_soft": 0, "I_soft": 0, "wer_soft_fonetik": 0.0089, "char_wer": 0.0098, "S_ch": 1, "D_ch": 0, "I_ch": 0, "ter": 0.0714, "edit": 1, "shifts": 0, "kualitas": "Sangat Baik", "diffs": [{"type": "S", "ref": "sinamian", "hyp": "senamian", "sim": 0.875, "pen": 0.125}]}, {"path": "Kurang Fasih/Manik.mp3", "kategori": "Kurang Fasih", "ref": "Subak inggih punika silih tunggil sistem irigrasi traditional sane wenten ring Bali sistem puniki nenten je wantah ngatur indik yeh ring carik nanging taler medasar antuk filosofi tri hita karana,tri hita karana meteges ketiga jalaraan kebahagiaan inggih punika parahyangan hubungan manusa sareng Ida sang hyang widhi ring sabilang subak pastika wenten Pura subak pinake ke genah ngaturang bakti, Dua pawongan hubungan manuse sareng manuse parakrama subak ngelaksana bareng bareng gotong royong ngatur pembagian yeh mangda adil, telu palemahan hubungan manusa sareng palemahan rakyat Bali melihara tanha Len yeh mangda tetep prasida keanggen ngatos masa depan subak puniki sampun masuk ring jagat internasional tur kalinggatman ulih UNESCO pinaka warisan budaya Dunia punika mawinan iraga pinah pulau Bali patut jaga lan miara subak Niki mangda nenten puniki kapang kalah jaman.", "hyp": "Subak inggih punika silih tunggil sistem biligasi tradisional sane wenten ring Bali. Sistem puniki wenten ja wantah ngatur indik yeh ring carik, nanging taler madasar antuk filosopi trihita karana. Trihita karana matega setiga jalaran kebahagiaan. Inggih punika parahiangan, hubungan manusa sareng ideh sanggah widi, ring sabilang subak pastika wenten pura subak pinlaka genah ngaturang bakti. Due pawongan, hubungan manusa sareng manusa, para krama subak malaksana bareng-bareng kotong royong, ngatur pambagian yeh mangda adil, telu palemahan. Hubungan manusa sareng palemahan rakyat Bali miara tanah len yeh mangda tetep prasida kaanggen nyantos masa depan. Subak puniki sampun rosup ring jagat intrasonal tur kaling gati-gati man olih UNESCO, pinaka warisan budaya dunia. Punika mawinan iraga pinaka krama Bali patut nyaga lan miara subak puniki mangda nénten punah kampang kalah jaman.", "N_kata": 129, "N_char": 875, "wer_klasik": 0.3566, "S_kl": 38, "D_kl": 4, "I_kl": 4, "C_kl": 87, "wer_soft": 0.2283, "err_soft": 29.454, "S_bobot": 21.454, "D_soft": 4, "I_soft": 4, "wer_soft_fonetik": 0.2118, "char_wer": 0.088, "S_ch": 41, "D_ch": 19, "I_ch": 17, "ter": 0.3605, "edit": 46, "shifts": 1, "kualitas": "Baik", "diffs": [{"type": "S", "ref": "irigrasi", "hyp": "biligasi", "sim": 0.625, "pen": 0.5}, {"type": "S", "ref": "traditional", "hyp": "tradisional", "sim": 0.909, "pen": 0.091}, {"type": "S", "ref": "nenten", "hyp": "wenten", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "je", "hyp": "ja", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "medasar", "hyp": "madasar", "sim": 0.857, "pen": 0.143}, {"type": "D", "ref": "filosofi", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "tri", "hyp": "filosopi", "sim": 0.125, "pen": 1.0}, {"type": "S", "ref": "hita", "hyp": "trihita", "sim": 0.571, "pen": 1.0}, {"type": "D", "ref": "tri", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "hita", "hyp": "trihita", "sim": 0.571, "pen": 1.0}, {"type": "S", "ref": "meteges", "hyp": "matega", "sim": 0.571, "pen": 1.0}, {"type": "S", "ref": "ketiga", "hyp": "setiga", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "jalaraan", "hyp": "jalaran", "sim": 0.875, "pen": 0.125}, {"type": "S", "ref": "parahyangan", "hyp": "parahiangan", "sim": 0.909, "pen": 0.091}, {"type": "D", "ref": "ida", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "sang", "hyp": "ideh", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "hyang", "hyp": "sanggah", "sim": 0.286, "pen": 1.0}, {"type": "S", "ref": "widhi", "hyp": "widi", "sim": 0.8, "pen": 0.5}, {"type": "D", "ref": "pinake", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "ke", "hyp": "pinlaka", "sim": 0.143, "pen": 1.0}, {"type": "S", "ref": "dua", "hyp": "due", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "manuse", "hyp": "manusa", "sim": 0.833, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "manusa", "sim": 0, "pen": 1}, {"type": "S", "ref": "manuse", "hyp": "para", "sim": 0.167, "pen": 1.0}, {"type": "S", "ref": "parakrama", "hyp": "krama", "sim": 0.556, "pen": 1.0}, {"type": "S", "ref": "ngelaksana", "hyp": "malaksana", "sim": 0.7, "pen": 0.5}, {"type": "S", "ref": "gotong", "hyp": "kotong", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "pembagian", "hyp": "pambagian", "sim": 0.889, "pen": 0.111}, {"type": "S", "ref": "melihara", "hyp": "miara", "sim": 0.625, "pen": 0.5}, {"type": "S", "ref": "tanha", "hyp": "tanah", "sim": 0.6, "pen": 0.5}, {"type": "S", "ref": "keanggen", "hyp": "kaanggen", "sim": 0.875, "pen": 0.125}, {"type": "S", "ref": "ngatos", "hyp": "nyantos", "sim": 0.714, "pen": 0.5}, {"type": "S", "ref": "masuk", "hyp": "rosup", "sim": 0.4, "pen": 1.0}, {"type": "S", "ref": "internasional", "hyp": "intrasonal", "sim": 0.769, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "kaling", "sim": 0, "pen": 1}, {"type": "I", "ref": "-", "hyp": "gati", "sim": 0, "pen": 1}, {"type": "I", "ref": "-", "hyp": "gati", "sim": 0, "pen": 1}, {"type": "S", "ref": "kalinggatman", "hyp": "man", "sim": 0.25, "pen": 1.0}, {"type": "S", "ref": "ulih", "hyp": "olih", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "pinah", "hyp": "pinaka", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "pulau", "hyp": "krama", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "jaga", "hyp": "nyaga", "sim": 0.6, "pen": 0.5}, {"type": "S", "ref": "niki", "hyp": "puniki", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "nenten", "hyp": "nénten", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "puniki", "hyp": "punah", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "kapang", "hyp": "kampang", "sim": 0.857, "pen": 0.143}]}, {"path": "Kurang Fasih/Mirah Pradnya.mp3", "kategori": "Kurang Fasih", "ref": "Buka slokane, aji keteng mudah, aji dadua mael sukmanipun kaucapang ring anake sane neten uning ngajinin tresna lan paweweh anak.", "hyp": "Buka selokane aji keting muda aji dadua mael suksman ipun kaucapang ring anake sane nenten uning ngajihin tresna lan pawawahan anak.", "N_kata": 20, "N_char": 126, "wer_klasik": 0.4, "S_kl": 7, "D_kl": 0, "I_kl": 1, "C_kl": 13, "wer_soft": 0.2375, "err_soft": 4.75, "S_bobot": 3.75, "D_soft": 0, "I_soft": 1, "wer_soft_fonetik": 0.2375, "char_wer": 0.0873, "S_ch": 4, "D_ch": 1, "I_ch": 6, "ter": 0.4, "edit": 8, "shifts": 0, "kualitas": "Baik", "diffs": [{"type": "S", "ref": "slokane", "hyp": "selokane", "sim": 0.875, "pen": 0.125}, {"type": "S", "ref": "keteng", "hyp": "keting", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "mudah", "hyp": "muda", "sim": 0.8, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "suksman", "sim": 0, "pen": 1}, {"type": "S", "ref": "sukmanipun", "hyp": "ipun", "sim": 0.4, "pen": 1.0}, {"type": "S", "ref": "neten", "hyp": "nenten", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "ngajinin", "hyp": "ngajihin", "sim": 0.875, "pen": 0.125}, {"type": "S", "ref": "paweweh", "hyp": "pawawahan", "sim": 0.556, "pen": 1.0}]}, {"path": "Kurang Fasih/Semaya.mp3", "kategori": "Kurang Fasih", "ref": "ida dane sareng sami tiang matur sukma antuk uratiyang druine titiang puputang antuk parama santhi.", "hyp": "Dane sareng sami tiang matur suksma antuk urat tiang duiné, didiang puputang antuk para masanti.", "N_kata": 15, "N_char": 98, "wer_klasik": 0.5333, "S_kl": 6, "D_kl": 1, "I_kl": 1, "C_kl": 8, "wer_soft": 0.4, "err_soft": 6.0, "S_bobot": 4.0, "D_soft": 1, "I_soft": 1, "wer_soft_fonetik": 0.4, "char_wer": 0.1531, "S_ch": 5, "D_ch": 7, "I_ch": 3, "ter": 0.5333, "edit": 8, "shifts": 0, "kualitas": "Cukup", "diffs": [{"type": "D", "ref": "ida", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "sukma", "hyp": "suksma", "sim": 0.833, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "urat", "sim": 0, "pen": 1}, {"type": "S", "ref": "uratiyang", "hyp": "tiang", "sim": 0.556, "pen": 1.0}, {"type": "S", "ref": "druine", "hyp": "duiné", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "titiang", "hyp": "didiang", "sim": 0.714, "pen": 0.5}, {"type": "S", "ref": "parama", "hyp": "para", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "santhi", "hyp": "masanti", "sim": 0.571, "pen": 1.0}]}, {"path": "Kurang Fasih/triasta.mp3", "kategori": "Kurang Fasih", "ref": "Ring sekolah, sisiane sami sampun sayaga jagi masekolah. Bapak Guru sampun rauh. Materi pelajaran rahina puniki nguningayang indik basa Bali", "hyp": "Ring sekolah, sisnyane sami sampun sayagi jagi mas sekolah. Bapa guru sampun rauh. Materi, plajaran lahina puniki, ngi, nayang, indik bahasa Bali.", "N_kata": 20, "N_char": 137, "wer_klasik": 0.5, "S_kl": 8, "D_kl": 0, "I_kl": 2, "C_kl": 12, "wer_soft": 0.3056, "err_soft": 6.111, "S_bobot": 4.111, "D_soft": 0, "I_soft": 2, "wer_soft_fonetik": 0.2877, "char_wer": 0.1022, "S_ch": 5, "D_ch": 4, "I_ch": 5, "ter": 0.5, "edit": 10, "shifts": 0, "kualitas": "Cukup", "diffs": [{"type": "S", "ref": "sisiane", "hyp": "sisnyane", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "sayaga", "hyp": "sayagi", "sim": 0.833, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "mas", "sim": 0, "pen": 1}, {"type": "S", "ref": "masekolah", "hyp": "sekolah", "sim": 0.778, "pen": 0.5}, {"type": "S", "ref": "bapak", "hyp": "bapa", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "pelajaran", "hyp": "plajaran", "sim": 0.889, "pen": 0.111}, {"type": "S", "ref": "rahina", "hyp": "lahina", "sim": 0.833, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "ngi", "sim": 0, "pen": 1}, {"type": "S", "ref": "nguningayang", "hyp": "nayang", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "basa", "hyp": "bahasa", "sim": 0.667, "pen": 0.5}]}, {"path": "Fasih/gung wah.mp3", "kategori": "Fasih", "ref": "Dina Galungan suba teka, makejang kulawarga tiange sibuk. Uling semeng suba macet di jalanan, nuju pura baduuran. Tiang matanjung-tanjung ngaba banten, meme tiange ngaba canang sari. Suasanane rame, ada anak negak ring bale banjar, ada masih anak ngigel di pura.", "hyp": "Dina Galungan suba tekeh. Makejang keluarga tiange sibuk. Uling semeng suba macet di jalan, nuju pura baduuran. Tiang matanjung tanjung ngaba banten. Meme tiange ngaba canang sehari. Suasannane rame. Ada anak negak ring Bale Banjar. Ada masih anak ngigel di pura.", "N_kata": 41, "N_char": 253, "wer_klasik": 0.122, "S_kl": 5, "D_kl": 0, "I_kl": 0, "C_kl": 36, "wer_soft": 0.0512, "err_soft": 2.1, "S_bobot": 2.1, "D_soft": 0, "I_soft": 0, "wer_soft_fonetik": 0.0512, "char_wer": 0.0395, "S_ch": 3, "D_ch": 3, "I_ch": 4, "ter": 0.122, "edit": 5, "shifts": 0, "kualitas": "Sangat Baik", "diffs": [{"type": "S", "ref": "teka", "hyp": "tekeh", "sim": 0.6, "pen": 0.5}, {"type": "S", "ref": "kulawarga", "hyp": "keluarga", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "jalanan", "hyp": "jalan", "sim": 0.714, "pen": 0.5}, {"type": "S", "ref": "sari", "hyp": "sehari", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "suasanane", "hyp": "suasannane", "sim": 0.9, "pen": 0.1}]}, {"path": "Fasih/Nanda.mp3", "kategori": "Fasih", "ref": "Gus kel kije gus ?, ooo ke umah ne buk kita, nah gus mejalan ke kelod suud ento gus jalan ke kangin, nah ring dangin jalane ditu rumah ne buk kita.", "hyp": "Gus, ke kija, Gus? Oh, ke umah nebu kita. Nah, Gus majalang ka kelot. Nah, suudentu Gus jalan ka kangin. Nah, ring dangin jalanne dituruh umah nebu kita.", "N_kata": 30, "N_char": 141, "wer_klasik": 0.5333, "S_kl": 14, "D_kl": 2, "I_kl": 0, "C_kl": 14, "wer_soft": 0.4214, "err_soft": 12.643, "S_bobot": 10.643, "D_soft": 2, "I_soft": 0, "wer_soft_fonetik": 0.4214, "char_wer": 0.1702, "S_ch": 9, "D_ch": 7, "I_ch": 8, "ter": 0.55, "edit": 16, "shifts": 1, "kualitas": "Cukup", "diffs": [{"type": "S", "ref": "kel", "hyp": "ke", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "kije", "hyp": "kija", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "ooo", "hyp": "oh", "sim": 0.333, "pen": 1.0}, {"type": "D", "ref": "ne", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "buk", "hyp": "nebu", "sim": 0.25, "pen": 1.0}, {"type": "S", "ref": "mejalan", "hyp": "majalang", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "ke", "hyp": "ka", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "kelod", "hyp": "kelot", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "suud", "hyp": "nah", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "ento", "hyp": "suudentu", "sim": 0.375, "pen": 1.0}, {"type": "S", "ref": "ke", "hyp": "ka", "sim": 0.5, "pen": 1.0}, {"type": "D", "ref": "jalane", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "ditu", "hyp": "jalanne", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "rumah", "hyp": "dituruh", "sim": 0.286, "pen": 1.0}, {"type": "S", "ref": "ne", "hyp": "umah", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "buk", "hyp": "nebu", "sim": 0.25, "pen": 1.0}]}, {"path": "Fasih/panji.mp3", "kategori": "Fasih", "ref": "wastan titiang panji, titiang ngeranjing ring SMA Negeri 3 Depasar", "hyp": "Wastan titiang panji, titiang ngranjing ring SMA Negeri Tiga Rainpasar.", "N_kata": 10, "N_char": 68, "wer_klasik": 0.2, "S_kl": 2, "D_kl": 0, "I_kl": 0, "C_kl": 8, "wer_soft": 0.11, "err_soft": 1.1, "S_bobot": 1.1, "D_soft": 0, "I_soft": 0, "wer_soft_fonetik": 0.11, "char_wer": 0.0735, "S_ch": 2, "D_ch": 1, "I_ch": 2, "ter": 0.2, "edit": 2, "shifts": 0, "kualitas": "Baik", "diffs": [{"type": "S", "ref": "ngeranjing", "hyp": "ngranjing", "sim": 0.9, "pen": 0.1}, {"type": "S", "ref": "depasar", "hyp": "rainpasar", "sim": 0.556, "pen": 1.0}]}, {"path": "Fasih/pak nyoman.mp3", "kategori": "Fasih", "ref": "Rahina ne mangkin, rahina radite jagi mabakti ring pura agung besakih sawatara berangkat mangkin jam pitu semengan. Nggih, asapunika atur piuning tiang.", "hyp": "Rahina ne mangkin, rahina radite jagi mabakti kring pura agung besakih, sawatara, perangkat mangkin jam pitu semengan. Nggih, asapunika atur pioning tiang.", "N_kata": 22, "N_char": 149, "wer_klasik": 0.1364, "S_kl": 3, "D_kl": 0, "I_kl": 0, "C_kl": 19, "wer_soft": 0.0343, "err_soft": 0.754, "S_bobot": 0.754, "D_soft": 0, "I_soft": 0, "wer_soft_fonetik": 0.0343, "char_wer": 0.0201, "S_ch": 2, "D_ch": 0, "I_ch": 1, "ter": 0.1364, "edit": 3, "shifts": 0, "kualitas": "Sangat Baik", "diffs": [{"type": "S", "ref": "ring", "hyp": "kring", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "berangkat", "hyp": "perangkat", "sim": 0.889, "pen": 0.111}, {"type": "S", "ref": "piuning", "hyp": "pioning", "sim": 0.857, "pen": 0.143}]}, {"path": "Fasih/Wilwa.mp3", "kategori": "Fasih", "ref": "Ainggih, sadurung titiang nglanturang atur, pinih kapertama ngiring ngaturang pangan jali, om swastyastu. Ring rahina sane becik paniki, titiang jagi maturang samatra nenin indik, puspa warsa.", "hyp": "Ainggih, sadurung titiang lanturang atur, pinih kapertama ngiring laturang pangan jaliuh, um suas tes tuk. Ring rahina sane becik paniki, titiang jagi maturang samatra nenin indik, pusva warsa.", "N_kata": 26, "N_char": 185, "wer_klasik": 0.3077, "S_kl": 6, "D_kl": 0, "I_kl": 2, "C_kl": 20, "wer_soft": 0.2308, "err_soft": 6.0, "S_bobot": 4.0, "D_soft": 0, "I_soft": 2, "wer_soft_fonetik": 0.2308, "char_wer": 0.0757, "S_ch": 7, "D_ch": 3, "I_ch": 4, "ter": 0.3077, "edit": 8, "shifts": 0, "kualitas": "Baik", "diffs": [{"type": "S", "ref": "nglanturang", "hyp": "lanturang", "sim": 0.818, "pen": 0.5}, {"type": "S", "ref": "ngaturang", "hyp": "laturang", "sim": 0.778, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "jaliuh", "sim": 0, "pen": 1}, {"type": "I", "ref": "-", "hyp": "um", "sim": 0, "pen": 1}, {"type": "S", "ref": "jali", "hyp": "suas", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "om", "hyp": "tes", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "swastyastu", "hyp": "tuk", "sim": 0.1, "pen": 1.0}, {"type": "S", "ref": "puspa", "hyp": "pusva", "sim": 0.8, "pen": 0.5}]}], "stats": {"Fasih": {"n_sent": 5, "N": 129, "Nc": 796, "wer_klasik": 0.2636, "wer_soft": 0.1752, "wer_soft_fonetik": 0.1695, "char_wer": 0.0704, "ter": 0.2632, "S_kl": 30, "D_kl": 2, "I_kl": 2, "S_ch": 23, "D_ch": 14, "I_ch": 19, "err_soft": 22.597, "q_dist": {"Sangat Baik": 2, "Cukup": 1, "Baik": 2}}, "Kurang Fasih": {"n_sent": 5, "N": 198, "Nc": 1338, "wer_klasik": 0.3687, "wer_soft": 0.2345, "wer_soft_fonetik": 0.2292, "char_wer": 0.0882, "ter": 0.373, "S_kl": 60, "D_kl": 5, "I_kl": 8, "S_ch": 56, "D_ch": 31, "I_ch": 31, "err_soft": 46.44, "q_dist": {"Sangat Baik": 1, "Baik": 2, "Cukup": 2}}, "GLOBAL": {"n_sent": 10, "N": 327, "Nc": 2134, "wer_klasik": 0.3272, "wer_soft": 0.2111, "wer_soft_fonetik": 0.1994, "char_wer": 0.0815, "ter": 0.3181, "S_kl": 90, "D_kl": 7, "I_kl": 10, "S_ch": 79, "D_ch": 45, "I_ch": 50, "err_soft": 69.037, "q_dist": {"Sangat Baik": 3, "Baik": 4, "Cukup": 3}}}}, "unfinetuned": {"rows": [{"path": "Kurang Fasih/kecap.mp3", "kategori": "Kurang Fasih", "ref": "waduh basang titiang seduk gati, timpal timpal sinamian ngerayunan nggih titiang ngajeng dumunan seduk.", "hyp": "Waduh.. basang titiang seduk gati.. timpal timpal senamian, ngerayunan geh.. titiang ngajeng dumunan.. seduk..", "N_kata": 14, "N_char": 102, "wer_klasik": 0.1429, "S_kl": 2, "D_kl": 0, "I_kl": 0, "C_kl": 12, "wer_soft": 0.0804, "err_soft": 1.125, "S_bobot": 1.125, "D_soft": 0, "I_soft": 0, "wer_soft_fonetik": 0.0804, "char_wer": 0.049, "S_ch": 2, "D_ch": 3, "I_ch": 0, "ter": 0.1429, "edit": 2, "shifts": 0, "kualitas": "Sangat Baik", "diffs": [{"type": "S", "ref": "sinamian", "hyp": "senamian", "sim": 0.875, "pen": 0.125}, {"type": "S", "ref": "inggih", "hyp": "geh", "sim": 0.333, "pen": 1.0}]}, {"path": "Kurang Fasih/Manik.mp3", "kategori": "Kurang Fasih", "ref": "Subak inggih punika silih tunggil sistem irigrasi traditional sane wenten ring Bali sistem puniki nenten je wantah ngatur indik yeh ring carik nanging taler medasar antuk filosofi tri hita karana,tri hita karana meteges ketiga jalaraan kebahagiaan inggih punika parahyangan hubungan manusa sareng Ida sang hyang widhi ring sabilang subak pastika wenten Pura subak pinake ke genah ngaturang bakti, Dua pawongan hubungan manuse sareng manuse parakrama subak ngelaksana bareng bareng gotong royong ngatur pembagian yeh mangda adil, telu palemahan hubungan manusa sareng palemahan rakyat Bali melihara tanha Len yeh mangda tetep prasida keanggen ngatos masa depan subak puniki sampun masuk ring jagat internasional tur kalinggatman ulih UNESCO pinaka warisan budaya Dunia punika mawinan iraga pinah pulau Bali patut jaga lan miara subak Niki mangda nenten puniki kapang kalah jaman.", "hyp": "Subah Ingger Punika, Silir Tunggil Sistem Irigasi Tradisional Sana Wyenton Ring Bali Sistem Punikin, Wyenton Jawa Antah Ngatur Indik, Ring Carik Nanging Talar, Medasar Antok Filosofi Trihita Karana Trihita Karana, Metega Satiga Jalanan Kebahagiaan Ingger Punika Parah Yangan, Hubungan Manusia, Sarang Idai Sangyang Widhi Ring Sabilang, Subah, Pastika Wyenton Pura Subah, Pinlaka, Genah, Ngaturang Bati Pawongan, Hubungan Manusia, Sarang Manusia, Parah Krama, Subah, Melaksana, Barang-Barang, Gotong, Royong Ngatur Pembagian Yeh, Mangda, Dil, Tlu, Palemahan, Hubungan Manusia, Sarang Palemahan, Rakyat Bali, Miara, Tanah, Len, Yeh, Mangda, Tetap, Prasida, Kanggan, Yantos, Masa depan Subah Puniki, Sampun Rasup Rang Jagat International Tour, Kaling, Gatman, Uleh, UNESCO, Pinlaka Warisan Budaya Dunia Pundi Kemawinan, Irage Pinlaka Krama Bali, Patut Nyage, Len, Miara, Subah Puniki, Mangda, Nantan, Punah, Kampang, Kalah, Jaman", "N_kata": 129, "N_char": 875, "wer_klasik": 0.5814, "S_kl": 68, "D_kl": 5, "I_kl": 2, "C_kl": 56, "wer_soft": 0.3566, "err_soft": 46.007, "S_bobot": 37.007, "D_soft": 6, "I_soft": 3, "wer_soft_fonetik": 0.3441, "char_wer": 0.1314, "S_ch": 66, "D_ch": 26, "I_ch": 23, "ter": 0.5853, "edit": 75, "shifts": 1, "kualitas": "Cukup", "diffs": [{"type": "S", "ref": "subak", "hyp": "subah", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "inggih", "hyp": "ingger", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "silih", "hyp": "silir", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "irigrasi", "hyp": "irigasi", "sim": 0.875, "pen": 0.125}, {"type": "S", "ref": "traditional", "hyp": "tradisional", "sim": 0.909, "pen": 0.091}, {"type": "S", "ref": "sane", "hyp": "sana", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "wenten", "hyp": "wyenton", "sim": 0.714, "pen": 0.5}, {"type": "S", "ref": "puniki", "hyp": "punikin", "sim": 0.857, "pen": 0.143}, {"type": "S", "ref": "nenten", "hyp": "wyenton", "sim": 0.571, "pen": 1.0}, {"type": "S", "ref": "je", "hyp": "jawa", "sim": 0.25, "pen": 1.0}, {"type": "S", "ref": "wantah", "hyp": "antah", "sim": 0.833, "pen": 0.5}, {"type": "D", "ref": "yeh", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "taler", "hyp": "talar", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "antuk", "hyp": "antok", "sim": 0.8, "pen": 0.5}, {"type": "D", "ref": "tri", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "hita", "hyp": "trihita", "sim": 0.571, "pen": 1.0}, {"type": "D", "ref": "tri", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "hita", "hyp": "trihita", "sim": 0.571, "pen": 1.0}, {"type": "S", "ref": "meteges", "hyp": "metega", "sim": 0.714, "pen": 0.5}, {"type": "S", "ref": "ketiga", "hyp": "satiga", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "jalaraan", "hyp": "jalanan", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "inggih", "hyp": "ingger", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "parahyangan", "hyp": "parah", "sim": 0.455, "pen": 1.0}, {"type": "S", "ref": "hubungan", "hyp": "yangan", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "manusa", "hyp": "hubungan", "sim": 0.25, "pen": 1.0}, {"type": "S", "ref": "sareng", "hyp": "manusia", "sim": 0.143, "pen": 1.0}, {"type": "S", "ref": "ida", "hyp": "sarang", "sim": 0.167, "pen": 1.0}, {"type": "S", "ref": "sang", "hyp": "idai", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "hyang", "hyp": "sangyang", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "subak", "hyp": "subah", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "wenten", "hyp": "wyenton", "sim": 0.714, "pen": 0.5}, {"type": "D", "ref": "subak", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "pinake", "hyp": "subah", "sim": 0.167, "pen": 1.0}, {"type": "S", "ref": "ke", "hyp": "pinlaka", "sim": 0.143, "pen": 1.0}, {"type": "D", "ref": "bakti", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "dua", "hyp": "bati", "sim": 0.0, "pen": 1.0}, {"type": "I", "ref": "-", "hyp": "manusia", "sim": 0, "pen": 1}, {"type": "S", "ref": "manuse", "hyp": "sarang", "sim": 0.167, "pen": 1.0}, {"type": "S", "ref": "sareng", "hyp": "manusia", "sim": 0.143, "pen": 1.0}, {"type": "S", "ref": "manuse", "hyp": "parah", "sim": 0.167, "pen": 1.0}, {"type": "S", "ref": "parakrama", "hyp": "krama", "sim": 0.556, "pen": 1.0}, {"type": "S", "ref": "subak", "hyp": "subah", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "ngelaksana", "hyp": "melaksana", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "bareng", "hyp": "barang", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "bareng", "hyp": "barang", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "adil", "hyp": "dil", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "telu", "hyp": "tlu", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "manusa", "hyp": "manusia", "sim": 0.857, "pen": 0.143}, {"type": "S", "ref": "sareng", "hyp": "sarang", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "melihara", "hyp": "miara", "sim": 0.625, "pen": 0.5}, {"type": "S", "ref": "tanha", "hyp": "tanah", "sim": 0.6, "pen": 0.5}, {"type": "S", "ref": "tetep", "hyp": "tetap", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "keanggen", "hyp": "kanggan", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "ngatos", "hyp": "yantos", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "subak", "hyp": "subah", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "masuk", "hyp": "rasup", "sim": 0.6, "pen": 0.5}, {"type": "S", "ref": "ring", "hyp": "rang", "sim": 0.75, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "international", "sim": 0, "pen": 1}, {"type": "S", "ref": "internasional", "hyp": "tour", "sim": 0.154, "pen": 1.0}, {"type": "S", "ref": "tur", "hyp": "kaling", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "kalinggatman", "hyp": "gatman", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "ulih", "hyp": "uleh", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "pinaka", "hyp": "pinlaka", "sim": 0.857, "pen": 0.143}, {"type": "S", "ref": "punika", "hyp": "pundi", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "mawinan", "hyp": "kemawinan", "sim": 0.778, "pen": 0.5}, {"type": "S", "ref": "iraga", "hyp": "irage", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "pinah", "hyp": "pinlaka", "sim": 0.571, "pen": 1.0}, {"type": "S", "ref": "pulau", "hyp": "krama", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "jaga", "hyp": "nyage", "sim": 0.4, "pen": 1.0}, {"type": "S", "ref": "lan", "hyp": "len", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "subak", "hyp": "subah", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "niki", "hyp": "puniki", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "nenten", "hyp": "nantan", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "puniki", "hyp": "punah", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "kapang", "hyp": "kampang", "sim": 0.857, "pen": 0.143}]}, {"path": "Kurang Fasih/Mirah Pradnya.mp3", "kategori": "Kurang Fasih", "ref": "Buka slokane, aji keteng mudah, aji dadua mael sukmanipun kaucapang ring anake sane neten uning ngajinin tresna lan paweweh anak.", "hyp": "Buka selokannya, Aji Keteng Muda, Aji Dadua, Maal, Suksmanipun, Kau, Capang, Reng, Anake, Sanin, Entern, Uning, Ngajihin, Tresnelan, Pawawahan, Anak.", "N_kata": 20, "N_char": 126, "wer_klasik": 0.65, "S_kl": 11, "D_kl": 1, "I_kl": 1, "C_kl": 8, "wer_soft": 0.3858, "err_soft": 7.716, "S_bobot": 5.716, "D_soft": 1, "I_soft": 1, "wer_soft_fonetik": 0.3858, "char_wer": 0.1667, "S_ch": 10, "D_ch": 2, "I_ch": 9, "ter": 0.65, "edit": 13, "shifts": 0, "kualitas": "Cukup", "diffs": [{"type": "S", "ref": "slokane", "hyp": "selokannya", "sim": 0.6, "pen": 0.5}, {"type": "S", "ref": "mudah", "hyp": "muda", "sim": 0.8, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "maal", "sim": 0, "pen": 1}, {"type": "S", "ref": "mael", "hyp": "suksmanipun", "sim": 0.182, "pen": 1.0}, {"type": "S", "ref": "sukmanipun", "hyp": "kau", "sim": 0.3, "pen": 1.0}, {"type": "S", "ref": "kaucapang", "hyp": "capang", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "ring", "hyp": "reng", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "sane", "hyp": "sanin", "sim": 0.6, "pen": 0.5}, {"type": "S", "ref": "neten", "hyp": "entern", "sim": 0.5, "pen": 1.0}, {"type": "D", "ref": "ngajinin", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "tresna", "hyp": "ngajihin", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "lan", "hyp": "tresnelan", "sim": 0.333, "pen": 1.0}, {"type": "S", "ref": "paweweh", "hyp": "pawawahan", "sim": 0.556, "pen": 1.0}]}, {"path": "Kurang Fasih/Semaya.mp3", "kategori": "Kurang Fasih", "ref": "ida dane sareng sami tiang matur sukma antuk uratiyang druine titiang puputang antuk parama santhi.", "hyp": "Dan yang Sarang Sammi, yang matur susah semua untuk urat yang durinih, itu yang puputang untuk para mesantik.", "N_kata": 15, "N_char": 98, "wer_klasik": 1.0667, "S_kl": 13, "D_kl": 0, "I_kl": 3, "C_kl": 2, "wer_soft": 0.8667, "err_soft": 13.0, "S_bobot": 10.0, "D_soft": 0, "I_soft": 3, "wer_soft_fonetik": 0.8667, "char_wer": 0.3163, "S_ch": 19, "D_ch": 2, "I_ch": 10, "ter": 1.0667, "edit": 16, "shifts": 0, "kualitas": "Sangat Buruk", "diffs": [{"type": "S", "ref": "ida", "hyp": "dan", "sim": 0.333, "pen": 1.0}, {"type": "S", "ref": "dane", "hyp": "yang", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "sareng", "hyp": "sarang", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "sami", "hyp": "sammi", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "tiang", "hyp": "yang", "sim": 0.6, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "susah", "sim": 0, "pen": 1}, {"type": "I", "ref": "-", "hyp": "semua", "sim": 0, "pen": 1}, {"type": "I", "ref": "-", "hyp": "untuk", "sim": 0, "pen": 1}, {"type": "S", "ref": "sukma", "hyp": "urat", "sim": 0.2, "pen": 1.0}, {"type": "S", "ref": "antuk", "hyp": "yang", "sim": 0.2, "pen": 1.0}, {"type": "S", "ref": "uratiyang", "hyp": "durinih", "sim": 0.222, "pen": 1.0}, {"type": "S", "ref": "druine", "hyp": "itu", "sim": 0.167, "pen": 1.0}, {"type": "S", "ref": "titiang", "hyp": "yang", "sim": 0.429, "pen": 1.0}, {"type": "S", "ref": "antuk", "hyp": "untuk", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "parama", "hyp": "para", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "santhi", "hyp": "mesantik", "sim": 0.5, "pen": 1.0}]}, {"path": "Kurang Fasih/triasta.mp3", "kategori": "Kurang Fasih", "ref": "Ring sekolah, sisiane sami sampun sayaga jagi masekolah. Bapak Guru sampun rauh. Materi pelajaran rahina puniki nguningayang indik basa Bali", "hyp": "Ring sekolah. Sisi ini samisampun saya dijagi mas sekolah. Bapak Guru Sampir Rauh, Matteri, Pelajaran Lahina Puniki, Ni, Nayang, Inde, Bahasa Bali.", "N_kata": 20, "N_char": 137, "wer_klasik": 0.7, "S_kl": 12, "D_kl": 0, "I_kl": 2, "C_kl": 8, "wer_soft": 0.4571, "err_soft": 9.143, "S_bobot": 7.143, "D_soft": 0, "I_soft": 2, "wer_soft_fonetik": 0.4571, "char_wer": 0.1606, "S_ch": 11, "D_ch": 5, "I_ch": 6, "ter": 0.7, "edit": 14, "shifts": 0, "kualitas": "Cukup", "diffs": [{"type": "I", "ref": "-", "hyp": "sisi", "sim": 0, "pen": 1}, {"type": "S", "ref": "sisiane", "hyp": "ini", "sim": 0.286, "pen": 1.0}, {"type": "S", "ref": "sami", "hyp": "samisampun", "sim": 0.4, "pen": 1.0}, {"type": "S", "ref": "sampun", "hyp": "saya", "sim": 0.333, "pen": 1.0}, {"type": "S", "ref": "sayaga", "hyp": "dijagi", "sim": 0.333, "pen": 1.0}, {"type": "S", "ref": "jagi", "hyp": "mas", "sim": 0.25, "pen": 1.0}, {"type": "S", "ref": "masekolah", "hyp": "sekolah", "sim": 0.778, "pen": 0.5}, {"type": "S", "ref": "sampun", "hyp": "sampir", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "materi", "hyp": "matteri", "sim": 0.857, "pen": 0.143}, {"type": "S", "ref": "rahina", "hyp": "lahina", "sim": 0.833, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "ni", "sim": 0, "pen": 1}, {"type": "S", "ref": "nguningayang", "hyp": "nayang", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "indik", "hyp": "inde", "sim": 0.6, "pen": 0.5}, {"type": "S", "ref": "basa", "hyp": "bahasa", "sim": 0.667, "pen": 0.5}]}, {"path": "Fasih/gung wah.mp3", "kategori": "Fasih", "ref": "Dina Galungan suba teka, makejang kulawarga tiange sibuk. Uling semeng suba macet di jalanan, nuju pura baduuran. Tiang matanjung-tanjung ngaba banten, meme tiange ngaba canang sari. Suasanane rame, ada anak negak ring bale banjar, ada masih anak ngigel di pura.", "hyp": "Di negalungan sebutekah, mekejang keluarga tiangi sibuk uling semengsubemacet di jalan, nuju pura berdoaran. Tiang metanjung-tanjung ngababantan memit tiangi ngabacan yang sehari, suasana ni rame, ada anak negar yang bali banyar, ada masa anak igal di pura.", "N_kata": 41, "N_char": 253, "wer_klasik": 0.6585, "S_kl": 24, "D_kl": 3, "I_kl": 0, "C_kl": 14, "wer_soft": 0.4814, "err_soft": 19.736, "S_bobot": 14.736, "D_soft": 4, "I_soft": 1, "wer_soft_fonetik": 0.4814, "char_wer": 0.1739, "S_ch": 25, "D_ch": 11, "I_ch": 8, "ter": 0.6585, "edit": 27, "shifts": 0, "kualitas": "Cukup", "diffs": [{"type": "D", "ref": "dina", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "galungan", "hyp": "di", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "suba", "hyp": "negalungan", "sim": 0.2, "pen": 1.0}, {"type": "S", "ref": "teka", "hyp": "sebutekah", "sim": 0.444, "pen": 1.0}, {"type": "S", "ref": "makejang", "hyp": "mekejang", "sim": 0.875, "pen": 0.125}, {"type": "S", "ref": "kulawarga", "hyp": "keluarga", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "tiange", "hyp": "tiangi", "sim": 0.833, "pen": 0.5}, {"type": "D", "ref": "semeng", "hyp": "-", "sim": 0, "pen": 1}, {"type": "D", "ref": "suba", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "macet", "hyp": "semengsubemacet", "sim": 0.333, "pen": 1.0}, {"type": "S", "ref": "jalanan", "hyp": "jalan", "sim": 0.714, "pen": 0.5}, {"type": "S", "ref": "baduuran", "hyp": "berdoaran", "sim": 0.556, "pen": 1.0}, {"type": "S", "ref": "matanjung", "hyp": "metanjung", "sim": 0.889, "pen": 0.111}, {"type": "S", "ref": "ngaba", "hyp": "ngababantan", "sim": 0.455, "pen": 1.0}, {"type": "S", "ref": "banten", "hyp": "memit", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "meme", "hyp": "tiangi", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "tiange", "hyp": "ngabacan", "sim": 0.125, "pen": 1.0}, {"type": "S", "ref": "ngaba", "hyp": "yang", "sim": 0.2, "pen": 1.0}, {"type": "S", "ref": "canang", "hyp": "sehari", "sim": 0.167, "pen": 1.0}, {"type": "S", "ref": "sari", "hyp": "suasana", "sim": 0.286, "pen": 1.0}, {"type": "S", "ref": "suasanane", "hyp": "ni", "sim": 0.111, "pen": 1.0}, {"type": "S", "ref": "negak", "hyp": "negar", "sim": 0.8, "pen": 0.5}, {"type": "S", "ref": "ring", "hyp": "yang", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "bale", "hyp": "bali", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "banjar", "hyp": "banyar", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "masih", "hyp": "masa", "sim": 0.6, "pen": 0.5}, {"type": "S", "ref": "ngigel", "hyp": "igal", "sim": 0.5, "pen": 1.0}]}, {"path": "Fasih/Nanda.mp3", "kategori": "Fasih", "ref": "Gus kel kije gus ?, ooo ke umah ne buk kita, nah gus mejalan ke kelod suud ento gus jalan ke kangin, nah ring dangin jalane ditu rumah ne buk kita.", "hyp": "Gos, kelkinja gos. Oh, ke rumah ebu kita. Nah, gos menjalankan kelot. Nah, suatu tentu, gos jalan kekangin. Nah, ring dangin jalan. Dia dituruh rumah ebu kita.", "N_kata": 30, "N_char": 141, "wer_klasik": 0.7333, "S_kl": 19, "D_kl": 3, "I_kl": 0, "C_kl": 8, "wer_soft": 0.5833, "err_soft": 17.5, "S_bobot": 14.5, "D_soft": 3, "I_soft": 0, "wer_soft_fonetik": 0.5833, "char_wer": 0.2695, "S_ch": 14, "D_ch": 9, "I_ch": 15, "ter": 0.7333, "edit": 22, "shifts": 0, "kualitas": "Buruk", "diffs": [{"type": "D", "ref": "gus", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "kel", "hyp": "gos", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "kije", "hyp": "kelkinja", "sim": 0.375, "pen": 1.0}, {"type": "S", "ref": "gus", "hyp": "gos", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "ooo", "hyp": "oh", "sim": 0.333, "pen": 1.0}, {"type": "D", "ref": "umah", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "ne", "hyp": "rumah", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "buk", "hyp": "ebu", "sim": 0.333, "pen": 1.0}, {"type": "S", "ref": "gus", "hyp": "gos", "sim": 0.667, "pen": 0.5}, {"type": "S", "ref": "mejalan", "hyp": "menjalankan", "sim": 0.636, "pen": 0.5}, {"type": "S", "ref": "ke", "hyp": "kelot", "sim": 0.4, "pen": 1.0}, {"type": "S", "ref": "kelod", "hyp": "nah", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "suud", "hyp": "suatu", "sim": 0.4, "pen": 1.0}, {"type": "S", "ref": "ento", "hyp": "tentu", "sim": 0.6, "pen": 0.5}, {"type": "S", "ref": "gus", "hyp": "gos", "sim": 0.667, "pen": 0.5}, {"type": "D", "ref": "ke", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "kangin", "hyp": "kekangin", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "jalane", "hyp": "jalan", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "ditu", "hyp": "dia", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "rumah", "hyp": "dituruh", "sim": 0.286, "pen": 1.0}, {"type": "S", "ref": "ne", "hyp": "rumah", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "buk", "hyp": "ebu", "sim": 0.333, "pen": 1.0}]}, {"path": "Fasih/panji.mp3", "kategori": "Fasih", "ref": "wastan titiang panji, titiang ngeranjing ring SMA Negeri 3 Depasar", "hyp": "Wasta titiang panji, titiang geranjing ring SMA No.3 dan pasar.", "N_kata": 10, "N_char": 68, "wer_klasik": 0.5, "S_kl": 4, "D_kl": 0, "I_kl": 1, "C_kl": 6, "wer_soft": 0.31, "err_soft": 3.1, "S_bobot": 2.1, "D_soft": 0, "I_soft": 1, "wer_soft_fonetik": 0.31, "char_wer": 0.1471, "S_ch": 2, "D_ch": 6, "I_ch": 2, "ter": 0.5, "edit": 5, "shifts": 0, "kualitas": "Cukup", "diffs": [{"type": "S", "ref": "wastan", "hyp": "wasta", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "ngeranjing", "hyp": "geranjing", "sim": 0.9, "pen": 0.1}, {"type": "S", "ref": "negeri", "hyp": "no", "sim": 0.167, "pen": 1.0}, {"type": "I", "ref": "-", "hyp": "dan", "sim": 0, "pen": 1}, {"type": "S", "ref": "depasar", "hyp": "pasar", "sim": 0.714, "pen": 0.5}]}, {"path": "Fasih/pak nyoman.mp3", "kategori": "Fasih", "ref": "Rahina ne mangkin, rahina radite jagi mabakti ring pura agung besakih sawatara berangkat mangkin jam pitu semengan. Nggih, asapunika atur piuning tiang.", "hyp": "Rahina Nemangkin, Rahina Raditi, Jagi Mbakti, Keringpura Agung Besakeh, Sawatara, Perangkat Mankin Jam, Pitus Semangan.", "N_kata": 22, "N_char": 149, "wer_klasik": 0.7273, "S_kl": 9, "D_kl": 7, "I_kl": 0, "C_kl": 6, "wer_soft": 0.462, "err_soft": 10.165, "S_bobot": 3.165, "D_soft": 7, "I_soft": 0, "wer_soft_fonetik": 0.462, "char_wer": 0.3087, "S_ch": 5, "D_ch": 39, "I_ch": 2, "ter": 0.7273, "edit": 16, "shifts": 0, "kualitas": "Buruk", "diffs": [{"type": "D", "ref": "ne", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "mangkin", "hyp": "nemangkin", "sim": 0.778, "pen": 0.5}, {"type": "S", "ref": "radite", "hyp": "raditi", "sim": 0.833, "pen": 0.5}, {"type": "D", "ref": "mabakti", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "ring", "hyp": "mbakti", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "pura", "hyp": "keringpura", "sim": 0.4, "pen": 1.0}, {"type": "S", "ref": "besakih", "hyp": "besakeh", "sim": 0.857, "pen": 0.143}, {"type": "S", "ref": "berangkat", "hyp": "perangkat", "sim": 0.889, "pen": 0.111}, {"type": "S", "ref": "mangkin", "hyp": "mankin", "sim": 0.857, "pen": 0.143}, {"type": "D", "ref": "pitu", "hyp": "-", "sim": 0, "pen": 1}, {"type": "D", "ref": "semengan", "hyp": "-", "sim": 0, "pen": 1}, {"type": "D", "ref": "inggih", "hyp": "-", "sim": 0, "pen": 1}, {"type": "D", "ref": "asapunika", "hyp": "-", "sim": 0, "pen": 1}, {"type": "D", "ref": "atur", "hyp": "-", "sim": 0, "pen": 1}, {"type": "S", "ref": "piuning", "hyp": "pitus", "sim": 0.286, "pen": 1.0}, {"type": "S", "ref": "tiang", "hyp": "semangan", "sim": 0.375, "pen": 1.0}]}, {"path": "Fasih/Wilwa.mp3", "kategori": "Fasih", "ref": "Ainggih, sadurung titiang nglanturang atur, pinih kapertama ngiring ngaturang pangan jali, om swastyastu. Ring rahina sane becik paniki, titiang jagi maturang samatra nenin indik, puspa warsa.", "hyp": "Aingeh, sedurung titiang lanturang atur, pinih ke pertama nyering lanturang penganjal yuh, um swastas tuku. Ring raina sana baca peniki, titiang jagi maturang sama tereng meneneng indik, busfa warza.", "N_kata": 26, "N_char": 185, "wer_klasik": 0.8077, "S_kl": 18, "D_kl": 0, "I_kl": 3, "C_kl": 8, "wer_soft": 0.5625, "err_soft": 14.625, "S_bobot": 11.625, "D_soft": 0, "I_soft": 3, "wer_soft_fonetik": 0.5625, "char_wer": 0.2216, "S_ch": 20, "D_ch": 7, "I_ch": 14, "ter": 0.8077, "edit": 21, "shifts": 0, "kualitas": "Buruk", "diffs": [{"type": "S", "ref": "ainggih", "hyp": "aingeh", "sim": 0.714, "pen": 0.5}, {"type": "S", "ref": "sadurung", "hyp": "sedurung", "sim": 0.875, "pen": 0.125}, {"type": "S", "ref": "nglanturang", "hyp": "lanturang", "sim": 0.818, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "ke", "sim": 0, "pen": 1}, {"type": "I", "ref": "-", "hyp": "pertama", "sim": 0, "pen": 1}, {"type": "S", "ref": "kapertama", "hyp": "nyering", "sim": 0.222, "pen": 1.0}, {"type": "S", "ref": "ngiring", "hyp": "lanturang", "sim": 0.444, "pen": 1.0}, {"type": "S", "ref": "ngaturang", "hyp": "penganjal", "sim": 0.222, "pen": 1.0}, {"type": "S", "ref": "pangan", "hyp": "yuh", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "jali", "hyp": "um", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "om", "hyp": "swastas", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "swastyastu", "hyp": "tuku", "sim": 0.2, "pen": 1.0}, {"type": "S", "ref": "rahina", "hyp": "raina", "sim": 0.833, "pen": 0.5}, {"type": "S", "ref": "sane", "hyp": "sana", "sim": 0.75, "pen": 0.5}, {"type": "S", "ref": "becik", "hyp": "baca", "sim": 0.4, "pen": 1.0}, {"type": "S", "ref": "paniki", "hyp": "peniki", "sim": 0.833, "pen": 0.5}, {"type": "I", "ref": "-", "hyp": "sama", "sim": 0, "pen": 1}, {"type": "S", "ref": "samatra", "hyp": "tereng", "sim": 0.0, "pen": 1.0}, {"type": "S", "ref": "nenin", "hyp": "meneneng", "sim": 0.5, "pen": 1.0}, {"type": "S", "ref": "puspa", "hyp": "busfa", "sim": 0.6, "pen": 0.5}, {"type": "S", "ref": "warsa", "hyp": "warza", "sim": 0.8, "pen": 0.5}]}], "stats": {"Fasih": {"n_sent": 5, "N": 129, "Nc": 796, "wer_klasik": 0.7054, "wer_soft": 0.5049, "wer_soft_fonetik": 0.4798, "char_wer": 0.2249, "ter": 0.6854, "S_kl": 74, "D_kl": 13, "I_kl": 4, "S_ch": 66, "D_ch": 72, "I_ch": 41, "err_soft": 65.126, "q_dist": {"Cukup": 2, "Buruk": 3}}, "Kurang Fasih": {"n_sent": 5, "N": 198, "Nc": 1338, "wer_klasik": 0.6061, "wer_soft": 0.3888, "wer_soft_fonetik": 0.4268, "char_wer": 0.145, "ter": 0.629, "S_kl": 106, "D_kl": 6, "I_kl": 8, "S_ch": 108, "D_ch": 38, "I_ch": 48, "err_soft": 76.991, "q_dist": {"Sangat Baik": 1, "Cukup": 3, "Sangat Buruk": 1}}, "GLOBAL": {"n_sent": 10, "N": 327, "Nc": 2134, "wer_klasik": 0.6453, "wer_soft": 0.4346, "wer_soft_fonetik": 0.4533, "char_wer": 0.1748, "ter": 0.6572, "S_kl": 180, "D_kl": 19, "I_kl": 12, "S_ch": 174, "D_ch": 110, "I_ch": 89, "err_soft": 142.117, "q_dist": {"Sangat Baik": 1, "Cukup": 5, "Sangat Buruk": 1, "Buruk": 3}}}}};
+
+function pct(v) { return (v*100).toFixed(1) + '%'; }
+function werColor(v) {
+  if(v < 0.15) return 'wer-low';
+  if(v < 0.35) return 'wer-mid';
+  if(v < 0.60) return 'wer-high';
+  return 'wer-vhigh';
+}
+function qualClass(q) {
+  const map = {'Sempurna':'q-sempurna','Sangat Baik':'q-sangat-baik','Baik':'q-baik','Cukup':'q-cukup','Buruk':'q-buruk','Sangat Buruk':'q-sangat-buruk'};
+  return map[q] || '';
+}
+function qdistColor(q) {
+  const map = {'Sempurna':'#06d6a0','Sangat Baik':'#00e5ff','Baik':'#a78bfa','Cukup':'#ffd166','Buruk':'#ff6b35','Sangat Buruk':'#ef476f'};
+  return map[q] || '#888';
+}
+function catClass(c) {
+  return c === 'Fasih' ? 'cat-fasih' : 'cat-kurang';
+}
+function shortPath(p) {
+  return p.replace('Kurang Fasih/','').replace('Fasih/','').replace('.mp3','');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function renderHero() {
+  const bal = DATA.balinese.stats.GLOBAL;
+  const unf = DATA.unfinetuned.stats.GLOBAL;
+  const metrics = [
+    ['WER Klasik','wer_klasik'],['WER Soft','wer_soft'],
+    ['CharWER','char_wer'],['TER','ter']
+  ];
+  function cardHTML(stats, cls, label, name) {
+    const mRows = metrics.map(([n,k]) => `
+      <div class="hero-metric">
+        <div class="hm-label">${n}</div>
+        <div class="hm-val ${stats[k] < 0.35 ? 'good' : 'bad'}">${pct(stats[k])}</div>
+      </div>`).join('');
+    return `<div class="hero-card ${cls}">
+      <div class="hero-label ${cls}">${label}</div>
+      <div class="hero-name">${name}</div>
+      <div class="hero-metrics">${mRows}</div>
+    </div>`;
+  }
+  document.getElementById('hero-compare').innerHTML =
+    cardHTML(bal,'bal','Fine-tuned','Whisper Balinese') +
+    `<div class="vs-divider"><div class="vs-text">VS</div><div class="vs-sub">10 kalimat<br/>per model</div></div>` +
+    cardHTML(unf,'unf','Unfinetuned','Whisper Original');
+}
+
+function renderImprovementBanner() {
+  const bal = DATA.balinese.stats.GLOBAL;
+  const unf = DATA.unfinetuned.stats.GLOBAL;
+  const items = [
+    ['WER Klasik', unf.wer_klasik, bal.wer_klasik],
+    ['WER Soft', unf.wer_soft, bal.wer_soft],
+    ['CharWER', unf.char_wer, bal.char_wer],
+    ['TER', unf.ter, bal.ter],
+  ];
+  const imp = items.map(([n,u,b]) => {
+    const delta = u - b;
+    const pctImp = ((delta/u)*100).toFixed(1);
+    return `<div class="imp-item">
+      <div class="imp-item-label">${n}</div>
+      <div class="imp-item-val">-${pctImp}%</div>
+    </div>`;
+  }).join('');
+  document.getElementById('improvement-banner').innerHTML = `
+    <div class="imp-label">🎯 Peningkatan Fine-tuning</div>
+    <div class="imp-items">${imp}</div>
+  `;
+}
+
+function renderGroupCard(stats, modelCls, gname) {
+  if(!stats) return `<div class="group-card"><div class="group-title">${gname}</div><p style="color:var(--text-muted);font-size:12px">Tidak ada data</p></div>`;
+  const metrics = [
+    ['WER Klasik', stats.wer_klasik],
+    ['WER Soft', stats.wer_soft],
+    ['WER Soft+Fonetik', stats.wer_soft_fonetik],
+    ['CharWER', stats.char_wer],
+    ['TER', stats.ter],
+  ];
+  const rows = metrics.map(([n,v]) => `
+    <div class="metric-row">
+      <div class="metric-name">${n}</div>
+      <div class="metric-val-wrap">
+        <div class="metric-bar-bg"><div class="metric-bar ${modelCls}" style="width:${Math.min(v*100,100)}%"></div></div>
+        <div class="metric-val ${werColor(v)}">${pct(v)}</div>
+      </div>
+    </div>`).join('');
+  const qdist = Object.entries(stats.q_dist).map(([q,c]) =>
+    `<div class="qdist-chip" style="background:${qdistColor(q)}22;color:${qdistColor(q)};border:1px solid ${qdistColor(q)}44;">${q} ×${c}</div>`
+  ).join('');
+  return `<div class="group-card">
+    <div class="group-title">${gname}</div>
+    <div class="group-meta">
+      <div class="gmeta-item">Kalimat: <span>${stats.n_sent}</span></div>
+      <div class="gmeta-item">Kata: <span>${stats.N}</span></div>
+      <div class="gmeta-item">Char: <span>${stats.Nc}</span></div>
+    </div>
+    ${rows}
+    <div class="qdist" style="margin-top:12px">${qdist}</div>
+  </div>`;
+}
+
+function renderGroups(containerId, modelData, modelCls) {
+  const groups = ['Fasih','Kurang Fasih','GLOBAL'];
+  document.getElementById(containerId).innerHTML = groups.map(g =>
+    renderGroupCard(modelData.stats[g], modelCls, g)
+  ).join('');
+}
+
+function renderBreakdown(containerId, modelData, modelCls) {
+  const groups = ['Fasih','Kurang Fasih'];
+  const cards = groups.map(g => {
+    const s = modelData.stats[g];
+    if(!s) return '';
+    const maxE = Math.max(s.S_kl, s.D_kl, s.I_kl, 1);
+    function errRow(label, val, cls) {
+      return `<div class="err-row">
+        <div class="err-type">${label}</div>
+        <div class="err-bar-wrap"><div class="err-bar-bg"><div class="err-bar ${cls}" style="width:${(val/maxE*100).toFixed(1)}%"></div></div></div>
+        <div class="err-num">${val} (${(val/s.N*100).toFixed(1)}%)</div>
+      </div>`;
+    }
+    return `<div class="breakdown-card">
+      <div class="breakdown-title">${g} — Error Klasik (N=${s.N} kata)</div>
+      ${errRow('Substitusi (S)', s.S_kl, 'err-subst')}
+      ${errRow('Delesi (D)', s.D_kl, 'err-delet')}
+      ${errRow('Insersi (I)', s.I_kl, 'err-insert')}
+      <div style="margin-top:12px;font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">
+        Total Error: ${s.S_kl+s.D_kl+s.I_kl} | Soft Err: ${s.err_soft.toFixed(1)} | CharErr: S=${s.S_ch} D=${s.D_ch} I=${s.I_ch}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById(containerId).innerHTML = cards;
+}
+
+function buildDiffTokens(row) {
+  const diffs = row.diffs;
+  if(!diffs || diffs.length === 0) {
+    const toks = row.ref.toLowerCase().split(' ').slice(0,30);
+    return toks.map(t => `<span class="tok tok-ok">${t}</span>`).join('') + (row.ref.split(' ').length > 30 ? '...' : '');
+  }
+  return diffs.slice(0,40).map(d => {
+    if(d.type === 'S') return `<span class="tok tok-sub" title="ref: ${d.ref} | hyp: ${d.hyp} | sim: ${d.sim}">${d.ref}→${d.hyp}</span>`;
+    if(d.type === 'D') return `<span class="tok tok-del" title="deleted: ${d.ref}">${d.ref}</span>`;
+    if(d.type === 'I') return `<span class="tok tok-ins" title="inserted: ${d.hyp}">[+${d.hyp}]</span>`;
+    return '';
+  }).join(' ');
+}
+
+let openDetail = null;
+function toggleDetail(id) {
+  const el = document.getElementById('detail-' + id);
+  if(openDetail && openDetail !== id) {
+    document.getElementById('detail-' + openDetail)?.classList.remove('open');
+  }
+  el.classList.toggle('open');
+  openDetail = el.classList.contains('open') ? id : null;
+}
+
+function renderSentences(containerId, rows, modelCls) {
+  const headers = `<tr>
+    <th>File</th><th>Kat.</th><th>N</th>
+    <th>WER Kl.</th><th>WER Soft</th><th>+Fonetik</th><th>CharWER</th><th>TER</th>
+    <th>Kualitas</th>
+  </tr>`;
+  const trows = rows.map((r, i) => {
+    const uid = containerId + '_' + i;
+    const trClass = modelCls === 'unf' ? 'unf-row' : '';
+    return `<tr class="${trClass}" onclick="toggleDetail('${uid}')">
+      <td class="path-cell" title="${r.path}">${shortPath(r.path)}</td>
+      <td><span class="cat-pill ${catClass(r.kategori)}">${r.kategori === 'Kurang Fasih' ? 'K.Fasih' : r.kategori}</span></td>
+      <td style="font-family:var(--font-mono);color:var(--text-muted)">${r.N_kata}</td>
+      <td class="wer-cell ${werColor(r.wer_klasik)}">${pct(r.wer_klasik)}</td>
+      <td class="wer-cell ${werColor(r.wer_soft)}">${pct(r.wer_soft)}</td>
+      <td class="wer-cell ${werColor(r.wer_soft_fonetik)}">${pct(r.wer_soft_fonetik)}</td>
+      <td class="wer-cell ${werColor(r.char_wer)}">${pct(r.char_wer)}</td>
+      <td class="wer-cell ${werColor(r.ter)}">${pct(r.ter)}</td>
+      <td><span class="qual-chip ${qualClass(r.kualitas)}">${r.kualitas}</span></td>
+    </tr>
+    <tr><td colspan="9" style="padding:0 8px">
+      <div class="detail-panel" id="detail-${uid}">
+        <div class="detail-section">
+          <div class="detail-label">📝 Referensi (Ground Truth)</div>
+          <div class="detail-text">${r.ref}</div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">🔊 Hipotesis (Whisper)</div>
+          <div class="detail-text">${r.hyp}</div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">🔍 Analisis Diff</div>
+          <div class="diff-legend">
+            <div class="dl"><div class="dl-dot" style="background:rgba(6,214,160,0.5)"></div>Benar</div>
+            <div class="dl"><div class="dl-dot" style="background:var(--accent-unf)"></div>Substitusi</div>
+            <div class="dl"><div class="dl-dot" style="background:var(--red)"></div>Delesi</div>
+            <div class="dl"><div class="dl-dot" style="background:var(--purple)"></div>Insersi</div>
+          </div>
+          <div class="diff-tokens">${buildDiffTokens(r)}</div>
+        </div>
+        <div style="display:flex;gap:20px;margin-top:10px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);flex-wrap:wrap;">
+          <span>S=${r.S_kl} D=${r.D_kl} I=${r.I_kl} C=${r.C_kl}</span>
+          <span>Soft Err: ${r.err_soft} | S_bobot: ${r.S_bobot}</span>
+          <span>CharErr: S=${r.S_ch} D=${r.D_ch} I=${r.I_ch}</span>
+          <span>TER edit=${r.edit} shifts=${r.shifts}</span>
+        </div>
+      </div>
+    </td></tr>`;
+  }).join('');
+  document.getElementById(containerId).innerHTML = `
+    <div class="sent-table-wrap">
+      <table class="sent-table"><thead>${headers}</thead><tbody>${trows}</tbody></table>
+    </div>`;
+}
+
+function renderCompareGroups() {
+  const bal = DATA.balinese.stats;
+  const unf = DATA.unfinetuned.stats;
+  const metrics = ['wer_klasik','wer_soft','wer_soft_fonetik','char_wer','ter'];
+  const mNames = ['WER Klasik','WER Soft','WER Soft+Fonetik','CharWER','TER'];
+  function compCard(gname) {
+    const bs = bal[gname]; const us = unf[gname];
+    if(!bs && !us) return '';
+    const rows = metrics.map((k,i) => {
+      const bv = bs ? bs[k] : null; const uv = us ? us[k] : null;
+      const delta = (uv != null && bv != null) ? uv - bv : null;
+      const barMax = Math.max(bv||0, uv||0, 0.01);
+      return `<div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">${mNames[i]}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+          <div style="width:60px;font-family:var(--font-mono);font-size:11px;color:var(--accent-bal);">BAL</div>
+          <div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;">
+            <div style="width:${bv ? Math.min(bv/barMax*100,100) : 0}%;height:5px;background:var(--accent-bal);border-radius:3px;"></div>
+          </div>
+          <div style="width:48px;font-family:var(--font-mono);font-size:12px;text-align:right;color:var(--accent-bal);">${bv ? pct(bv) : '-'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:60px;font-family:var(--font-mono);font-size:11px;color:var(--accent-unf);">UNFT</div>
+          <div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;">
+            <div style="width:${uv ? Math.min(uv/barMax*100,100) : 0}%;height:5px;background:var(--accent-unf);border-radius:3px;"></div>
+          </div>
+          <div style="width:48px;font-family:var(--font-mono);font-size:12px;text-align:right;color:var(--accent-unf);">${uv ? pct(uv) : '-'}</div>
+        </div>
+        ${delta !== null ? `<div style="font-family:var(--font-mono);font-size:10px;margin-top:2px;color:${delta>0?'var(--red)':'var(--green)'};margin-left:66px;">Δ ${delta>0?'+':''}${pct(delta)}</div>` : ''}
+      </div>`;
+    }).join('');
+    const n = (bs?.n_sent || 0) + (us?.n_sent || 0);
+    return `<div class="group-card">
+      <div class="group-title">${gname}</div>
+      ${rows}
+    </div>`;
+  }
+  document.getElementById('compare-groups').innerHTML =
+    compCard('Fasih') + compCard('Kurang Fasih') + compCard('GLOBAL');
+}
+
+function renderCompareSentences() {
+  const brows = DATA.balinese.rows;
+  const urows = DATA.unfinetuned.rows;
+  const umap = {};
+  urows.forEach(r => umap[r.path] = r);
+  const headers = `<tr>
+    <th>File</th><th>Kat.</th>
+    <th colspan="2">WER Klasik</th><th colspan="2">WER Soft</th><th colspan="2">CharWER</th><th colspan="2">TER</th>
+    <th>Δ WER Kl.</th>
+  </tr>
+  <tr style="font-size:9px;">
+    <th></th><th></th>
+    <th style="color:var(--accent-bal)">BAL</th><th style="color:var(--accent-unf)">UNFT</th>
+    <th style="color:var(--accent-bal)">BAL</th><th style="color:var(--accent-unf)">UNFT</th>
+    <th style="color:var(--accent-bal)">BAL</th><th style="color:var(--accent-unf)">UNFT</th>
+    <th style="color:var(--accent-bal)">BAL</th><th style="color:var(--accent-unf)">UNFT</th>
+    <th></th>
+  </tr>`;
+  const trows = brows.map(br => {
+    const ur = umap[br.path];
+    if(!ur) return '';
+    const delta = ur.wer_klasik - br.wer_klasik;
+    return `<tr>
+      <td title="${br.path}">${shortPath(br.path)}</td>
+      <td><span class="cat-pill ${catClass(br.kategori)}">${br.kategori === 'Kurang Fasih' ? 'K.Fasih' : br.kategori}</span></td>
+      <td class="val-bal" style="font-family:var(--font-mono);font-size:12px;font-weight:700;">${pct(br.wer_klasik)}</td>
+      <td class="val-unf" style="font-family:var(--font-mono);font-size:12px;font-weight:700;">${pct(ur.wer_klasik)}</td>
+      <td class="val-bal" style="font-family:var(--font-mono);font-size:12px;">${pct(br.wer_soft)}</td>
+      <td class="val-unf" style="font-family:var(--font-mono);font-size:12px;">${pct(ur.wer_soft)}</td>
+      <td class="val-bal" style="font-family:var(--font-mono);font-size:12px;">${pct(br.char_wer)}</td>
+      <td class="val-unf" style="font-family:var(--font-mono);font-size:12px;">${pct(ur.char_wer)}</td>
+      <td class="val-bal" style="font-family:var(--font-mono);font-size:12px;">${pct(br.ter)}</td>
+      <td class="val-unf" style="font-family:var(--font-mono);font-size:12px;">${pct(ur.ter)}</td>
+      <td class="${delta > 0 ? 'delta-better' : 'delta-worse'}" style="font-family:var(--font-mono);font-size:12px;">
+        ${delta > 0 ? '-' : '+'}${Math.abs(delta*100).toFixed(1)}%${delta > 0 ? ' ✓' : ' ✗'}
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('compare-sentences').innerHTML = `
+    <div class="compare-table-wrap">
+      <table class="compare-table"><thead>${headers}</thead><tbody>${trows}</tbody></table>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">
+      Δ: positif (✓) = Balinese lebih baik; negatif (✗) = Unfinetuned lebih baik
+    </div>`;
+}
+
+// Initialize
+renderHero();
+renderImprovementBanner();
+renderGroups('bal-groups', DATA.balinese, 'bal');
+renderGroups('unf-groups', DATA.unfinetuned, 'unf');
+renderBreakdown('bal-breakdown', DATA.balinese, 'bal');
+renderBreakdown('unf-breakdown', DATA.unfinetuned, 'unf');
+renderSentences('bal-sentences', DATA.balinese.rows, 'bal');
+renderSentences('unf-sentences', DATA.unfinetuned.rows, 'unf');
+renderCompareGroups();
+renderCompareSentences();
+</script>
+</body>
+</html>

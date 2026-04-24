@@ -1,0 +1,11 @@
+path,kategori,N_kata,N_char,WER_Klasik,S_klasik,D_klasik,I_klasik,Benar_klasik,WER_Soft,Error_Berbobot,S_bobot,D_soft,I_soft,WER_Soft_Fonetik,CharWER,S_char,D_char,I_char,TER,Edit_Final,Shifts,Kualitas
+Kurang Fasih/kecap.mp3,Kurang Fasih,14,102,0.0714,1,0,0,13,0.0089,0.125,0.125,0,0,0.0089,0.0098,1,0,0,0.0714,1,0,Sangat Baik
+Kurang Fasih/Manik.mp3,Kurang Fasih,129,875,0.3566,38,4,4,87,0.2283,29.454,21.454,4,4,0.2118,0.0880,41,19,17,0.3605,46,1,Baik
+Kurang Fasih/Mirah Pradnya.mp3,Kurang Fasih,20,126,0.4000,7,0,1,13,0.2375,4.750,3.750,0,1,0.2375,0.0873,4,1,6,0.4000,8,0,Baik
+Kurang Fasih/Semaya.mp3,Kurang Fasih,15,98,0.5333,6,1,1,8,0.4000,6.000,4.000,1,1,0.4000,0.1531,5,7,3,0.5333,8,0,Cukup
+Kurang Fasih/triasta.mp3,Kurang Fasih,20,137,0.5000,8,0,2,12,0.3056,6.111,4.111,0,2,0.2877,0.1022,5,4,5,0.5000,10,0,Cukup
+Fasih/gung wah.mp3,Fasih,41,253,0.1220,5,0,0,36,0.0512,2.100,2.100,0,0,0.0512,0.0395,3,3,4,0.1220,5,0,Sangat Baik
+Fasih/Nanda.mp3,Fasih,30,141,0.5333,14,2,0,14,0.4214,12.643,10.643,2,0,0.4214,0.1702,9,7,8,0.5500,16,1,Cukup
+Fasih/panji.mp3,Fasih,10,68,0.2000,2,0,0,8,0.1100,1.100,1.100,0,0,0.1100,0.0735,2,1,2,0.2000,2,0,Baik
+Fasih/pak nyoman.mp3,Fasih,22,149,0.1364,3,0,0,19,0.0343,0.754,0.754,0,0,0.0343,0.0201,2,0,1,0.1364,3,0,Sangat Baik
+Fasih/Wilwa.mp3,Fasih,26,185,0.3077,6,0,2,20,0.2308,6.000,4.000,0,2,0.2308,0.0757,7,3,4,0.3077,8,0,Baik
