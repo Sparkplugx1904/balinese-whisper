@@ -176,11 +176,12 @@ select{
   background:rgba(90,232,176,.08);border:1.5px solid var(--accent2);
   border-radius:8px;color:var(--accent2);
   font-family:var(--mono);font-size:.85rem;font-weight:700;
-  letter-spacing:.06em;cursor:pointer;transition:all .2s;display:none;
+  letter-spacing:.06em;cursor:pointer;transition:all .2s;
+  opacity:.4;
 }
-.go-btn:hover{background:rgba(90,232,176,.16);transform:translateY(-1px)}
-.go-btn.show{display:block}
-.go-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.go-btn:hover:not(:disabled){background:rgba(90,232,176,.16);transform:translateY(-1px)}
+.go-btn:disabled{cursor:not-allowed;transform:none}
+.go-btn.ready{opacity:1;background:rgba(90,232,176,.18)}
 
 /* ── Result ── */
 .transcript-box{
@@ -581,7 +582,17 @@ function pcmToWavBlob(pcm, sr) {
 function refreshGoBtn(){
   const ok=modelReady&&audioBlob!=null;
   const b=document.getElementById('goBtn');
-  b.classList.toggle('show',ok); b.disabled=!ok;
+  b.disabled=!ok;
+  b.classList.toggle('ready', ok);
+  if (ok) {
+    b.textContent = '▶ Mulai Transkripsi';
+  } else if (!modelReady && !audioBlob) {
+    b.textContent = '① Muat model dulu  •  ② Upload audio';
+  } else if (!modelReady) {
+    b.textContent = '⚠ Muat model dulu (langkah 01)';
+  } else {
+    b.textContent = '⚠ Pilih file audio (langkah 02)';
+  }
 }
 
 // ── Upload Transcribe via SSE ─────────────────────────────

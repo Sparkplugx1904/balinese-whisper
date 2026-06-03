@@ -13,7 +13,7 @@ def start_tunnel(port, on_url_update=None):
     Returns:
         process: Subprocess dari cloudflared.
     """
-    print(f"⌛ [Cloudflare] Meminta lorong rahasia untuk port {port}...")
+    print(f"[Cloudflare] Meminta lorong rahasia untuk port {port}...")
 
     command = ["cloudflared", "tunnel", "--url", f"http://127.0.0.1:{port}"]
 
@@ -32,9 +32,10 @@ def start_tunnel(port, on_url_update=None):
             match = url_pattern.search(line)
             if match:
                 url = match.group(0)
-                print("\n" + "🚀" * 15)
+                bar = "*" * 60
+                print("\n" + bar)
                 print(f"  WEB ONLINE DI: {url}")
-                print("🚀" * 15 + "\n")
+                print(bar + "\n")
 
                 # Panggil callback jika disediakan
                 if on_url_update:
