@@ -392,17 +392,40 @@ async function fetchModels() {
   const g = document.getElementById('modelGrid');
   g.innerHTML = '';
   if (!d.models?.length) { g.innerHTML='<span style="color:var(--red);font-size:.8rem">Tidak ada model di folder models/</span>'; return; }
+  
+  const defTarget = d.selected || d.default || (d.models.includes('ggml-small-balinese.bin') ? 'ggml-small-balinese.bin' : d.models[0]);
+
   d.models.forEach(m => {
     const b = document.createElement('button');
-    b.className='model-btn'; b.textContent=m;
-    b.onclick=()=>pickModel(m); g.appendChild(b);
+    b.className = 'model-btn' + (m === defTarget ? ' active' : '');
+    b.textContent = m;
+    b.onclick = () => pickModel(m);
+    g.appendChild(b);
   });
+
+  if (defTarget) {
+    selModel = defTarget;
+    try {
+      const st = await (await fetch('/api/load-status')).json();
+      if (st.status === 'ready') {
+        modelReady = true;
+        setS('ready', `Model "${selModel}" siap ✓ (Default)`);
+        const btn = document.getElementById('loadBtn');
+        btn.disabled = false;
+        btn.textContent = 'Model Dimuat ✓';
+        refreshGoBtn();
+        return;
+      }
+    } catch(e) {}
+    loadModel();
+  }
 }
 
 function pickModel(n) {
   selModel = n;
   document.querySelectorAll('.model-btn').forEach(b=>b.classList.toggle('active',b.textContent===n));
   document.getElementById('loadBtn').disabled = false;
+  document.getElementById('loadBtn').textContent = 'Muat Model';
 }
 
 // ── Load model ────────────────────────────

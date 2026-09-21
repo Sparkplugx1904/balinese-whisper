@@ -27,12 +27,16 @@ from PIL import Image, ImageTk
 import qrcode
 
 # Setup path lokal & PyInstaller frozen
-if getattr(sys, 'frozen', False):
-    ROOT = os.path.dirname(sys.executable)
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    BUNDLE_DIR = sys._MEIPASS
 else:
-    ROOT = os.path.dirname(os.path.abspath(__file__))
+    BUNDLE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-sys.path.insert(0, ROOT)
+EXE_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else BUNDLE_DIR
+ROOT = BUNDLE_DIR
+
+sys.path.insert(0, BUNDLE_DIR)
+sys.path.insert(0, EXE_DIR)
 import server as bw_server
 import cloudflare as cf_tunnel
 
@@ -66,12 +70,14 @@ class BalineseWhisperApp:
         self.root.configure(bg="#080b0f")
 
         # Set Icon
-        icon_path = os.path.join(ROOT, "app.ico")
-        if os.path.isfile(icon_path):
-            try:
-                self.root.iconbitmap(icon_path)
-            except Exception:
-                pass
+        for d in [BUNDLE_DIR, EXE_DIR]:
+            icon_path = os.path.join(d, "app.ico")
+            if os.path.isfile(icon_path):
+                try:
+                    self.root.iconbitmap(icon_path)
+                    break
+                except Exception:
+                    pass
 
         self.port = find_free_port(8000)
         self.local_url = f"http://127.0.0.1:{self.port}"
@@ -123,6 +129,16 @@ class BalineseWhisperApp:
             anchor="w"
         )
         self.lbl_server_status.pack(fill="x", padx=12, pady=(8, 2))
+
+        self.lbl_model_status = tk.Label(
+            status_card,
+            text=f"● Default Model: {bw_server.DEFAULT_MODEL} (Siap)",
+            font=("Consolas", 8),
+            fg="#5ae8b0",
+            bg="#0f1318",
+            anchor="w"
+        )
+        self.lbl_model_status.pack(fill="x", padx=12, pady=(2, 2))
 
         self.lbl_tunnel_status = tk.Label(
             status_card,

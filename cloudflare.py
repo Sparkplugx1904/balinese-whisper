@@ -11,24 +11,26 @@ import subprocess
 import threading
 import re
 
-if getattr(sys, 'frozen', False):
-    ROOT = os.path.dirname(sys.executable)
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    BUNDLE_DIR = sys._MEIPASS
 else:
-    ROOT = os.path.dirname(os.path.abspath(__file__))
+    BUNDLE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+EXE_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else BUNDLE_DIR
 
 
 def get_cloudflared_path() -> str:
-    """Cari path executable cloudflared (prioritaskan folder lokal aplikasi)."""
-    local_bin = os.path.join(ROOT, "cloudflared.exe")
-    if os.path.isfile(local_bin):
-        return local_bin
-    in_bin = os.path.join(ROOT, "bin", "cloudflared.exe")
-    if os.path.isfile(in_bin):
-        return in_bin
-    which_bin = shutil.which("cloudflared")
-    if which_bin:
-        return which_bin
-    return None
+    """Cari path executable cloudflared (prioritaskan folder bundle / lokal aplikasi)."""
+    candidates = [
+        os.path.join(BUNDLE_DIR, "cloudflared.exe"),
+        os.path.join(BUNDLE_DIR, "bin", "cloudflared.exe"),
+        os.path.join(EXE_DIR, "cloudflared.exe"),
+        os.path.join(EXE_DIR, "bin", "cloudflared.exe"),
+    ]
+    for p in candidates:
+        if os.path.isfile(p):
+            return p
+    return shutil.which("cloudflared")
 
 
 def is_cloudflared_available() -> bool:

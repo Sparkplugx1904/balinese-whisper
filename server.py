@@ -52,53 +52,91 @@ sys.stderr = SafeStream(sys.stderr)
 #  KONFIGURASI PATH
 # ════════════════════════════════════════════════════════════════
 
-if getattr(sys, 'frozen', False):
-    ROOT = os.path.dirname(sys.executable)
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    BUNDLE_DIR = sys._MEIPASS
 else:
-    ROOT = os.path.dirname(os.path.abspath(__file__))
-MODELS_DIR = os.path.join(ROOT, "models")
-BIN_DIR    = os.path.join(ROOT, "bin")
-WHISPER_CLI = os.path.join(BIN_DIR, "whisper-cli.exe")
-WORK_DIR   = os.path.join(tempfile.gettempdir(), "balinese-whisper")
+    BUNDLE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+EXE_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else BUNDLE_DIR
+ROOT = BUNDLE_DIR
+
+MODELS_DIR          = os.path.join(BUNDLE_DIR, "models")
+EXTERNAL_MODELS_DIR = os.path.join(EXE_DIR, "models")
+BIN_DIR             = os.path.join(BUNDLE_DIR, "bin")
+EXTERNAL_BIN_DIR    = os.path.join(EXE_DIR, "bin")
+WORK_DIR            = os.path.join(tempfile.gettempdir(), "balinese-whisper")
 os.makedirs(WORK_DIR, exist_ok=True)
 
-# Cek ketersediaan tool
-HAS_WHISPER_CLI = os.path.isfile(WHISPER_CLI)
-HAS_FFMPEG      = shutil.which("ffmpeg") is not None
-HAS_FFPROBE     = shutil.which("ffprobe") is not None
+# Tambahkan semua direktori bin/root ke PATH agar subprocess langsung menemukan tool
+for p in [BIN_DIR, EXTERNAL_BIN_DIR, BUNDLE_DIR, EXE_DIR]:
+    if p and os.path.isdir(p) and p not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = p + os.pathsep + os.environ.get("PATH", "")
 
-# Batas transkripsi konkuren (hemat RAM karena tiap subprocess muat model)
+def get_bin(name: str) -> str:
+    for d in [BIN_DIR, EXTERNAL_BIN_DIR]:
+        p = os.path.join(d, name)
+        if os.path.isfile(p):
+            return p
+    return shutil.which(name)
+
+WHISPER_CLI = get_bin("whisper-cli.exe")
+FFMPEG_BIN  = get_bin("ffmpeg.exe")
+FFPROBE_BIN = get_bin("ffprobe.exe")
+
+HAS_WHISPER_CLI = WHISPER_CLI is not None and os.path.isfile(WHISPER_CLI)
+HAS_FFMPEG      = FFMPEG_BIN is not None
+HAS_FFPROBE     = FFPROBE_BIN is not None
+
 MAX_CONCURRENT = 2
 CHUNK_SECONDS  = 30
+DEFAULT_MODEL  = "ggml-small-balinese.bin"
 
 
 # ════════════════════════════════════════════════════════════════
-#  STATE GLOBAL
+#  STATE GLOBAL & MODEL RESOLVER
 # ════════════════════════════════════════════════════════════════
 
-state_lock = threading.Lock()
-state = {
-    "selected_model": None,
-    "status":         "idle",
-    "message":        "Pilih model untuk memulai",
-}
+def get_model_path(model_name: str) -> str:
+    for d in [MODELS_DIR, EXTERNAL_MODELS_DIR]:
+        p = os.path.join(d, model_name)
+        if os.path.isfile(p):
+            return p
+    return os.path.join(MODELS_DIR, model_name)
 
-# Daftar proses whisper-cli yang sedang jalan (untuk fitur cancel)
-active_procs   = set()
-active_lock    = threading.Lock()
-
-# Batas paralel
-semaphore      = threading.Semaphore(MAX_CONCURRENT)
-
-
-# ════════════════════════════════════════════════════════════════
-#  UTILITAS
-# ════════════════════════════════════════════════════════════════
+def get_asset_path(filename: str) -> str:
+    for d in [BUNDLE_DIR, EXE_DIR]:
+        p = os.path.join(d, filename)
+        if os.path.isfile(p):
+            return p
+    return os.path.join(BUNDLE_DIR, filename)
 
 def list_models() -> list:
-    if not os.path.isdir(MODELS_DIR):
-        return []
-    return sorted(f for f in os.listdir(MODELS_DIR) if f.lower().endswith(".bin"))
+    found = set()
+    for d in [MODELS_DIR, EXTERNAL_MODELS_DIR]:
+        if os.path.isdir(d):
+            for f in os.listdir(d):
+                if f.lower().endswith(".bin"):
+                    found.add(f)
+    return sorted(found)
+
+state_lock = threading.Lock()
+
+# Inisialisasi model default
+_default_path = get_model_path(DEFAULT_MODEL)
+if os.path.isfile(_default_path):
+    _init_model = DEFAULT_MODEL
+    _init_status = "ready"
+    _init_msg = f"Model '{DEFAULT_MODEL}' siap (default)"
+else:
+    _init_model = None
+    _init_status = "idle"
+    _init_msg = "Pilih model untuk memulai"
+
+state = {
+    "selected_model": _init_model,
+    "status":         _init_status,
+    "message":        _init_msg,
+}
 
 
 def run_subprocess(cmd: list, timeout: int = 600) -> tuple:
@@ -131,7 +169,7 @@ def get_duration(audio_path: str) -> float:
         return 0.0
     try:
         r = subprocess.run(
-            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+            [FFPROBE_BIN, "-v", "error", "-show_entries", "format=duration",
              "-of", "default=noprint_wrappers=1:nokey=1", audio_path],
             capture_output=True, text=True, timeout=15,
             creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
@@ -151,7 +189,7 @@ def to_wav(src: str, dst: str) -> bool:
         return False
     try:
         cmd = [
-            "ffmpeg", "-y", "-i", src,
+            FFMPEG_BIN, "-y", "-i", src,
             "-vn",
             "-acodec", "pcm_s16le",
             "-ac", "1",
@@ -174,7 +212,7 @@ def split_chunks(wav_path: str, out_dir: str, chunk_sec: int = CHUNK_SECONDS) ->
     pattern = os.path.join(out_dir, "chunk_%03d.wav")
     try:
         subprocess.run(
-            ["ffmpeg", "-y", "-i", wav_path,
+            [FFMPEG_BIN, "-y", "-i", wav_path,
              "-f", "segment",
              "-segment_time", str(chunk_sec),
              "-c", "copy",
@@ -341,18 +379,19 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             return self.serve_index()
         if path in ("/app.ico", "/favicon.ico"):
-            return self.serve_file(os.path.join(ROOT, "app.ico"), "image/x-icon")
+            return self.serve_file("app.ico", "image/x-icon")
         if path == "/app.png":
-            return self.serve_file(os.path.join(ROOT, "app.png"), "image/png")
+            return self.serve_file("app.png", "image/png")
         if path == "/api/models":
             return self.api_models()
         if path == "/api/load-status":
             return self.api_load_status()
         return self._json(404, {"error": "not found"})
 
-    def serve_file(self, file_path: str, content_type: str):
+    def serve_file(self, filename: str, content_type: str):
+        file_path = get_asset_path(filename)
         if not os.path.isfile(file_path):
-            return self._json(404, {"error": "file not found"})
+            return self._json(404, {"error": f"{filename} not found"})
         with open(file_path, "rb") as f:
             data = f.read()
         self.send_response(200)
@@ -375,7 +414,7 @@ class Handler(BaseHTTPRequestHandler):
 
     # ── Static: index.html ───────────────────────────────────
     def serve_index(self):
-        path = os.path.join(ROOT, "index.html")
+        path = get_asset_path("index.html")
         if not os.path.isfile(path):
             return self._json(404, {"error": "index.html not found"})
         with open(path, "rb") as f:
@@ -388,7 +427,15 @@ class Handler(BaseHTTPRequestHandler):
 
     # ── API: /api/models ─────────────────────────────────────
     def api_models(self):
-        return self._json(200, {"models": list_models()})
+        models = list_models()
+        with state_lock:
+            curr = state["selected_model"]
+        def_model = DEFAULT_MODEL if DEFAULT_MODEL in models else (models[0] if models else None)
+        return self._json(200, {
+            "models": models,
+            "default": def_model,
+            "selected": curr
+        })
 
     # ── API: /api/heartbeat ──────────────────────────────────
     def api_heartbeat(self):
@@ -469,6 +516,12 @@ class Handler(BaseHTTPRequestHandler):
 
         with state_lock:
             model = state["selected_model"]
+        if not model:
+            if os.path.isfile(os.path.join(MODELS_DIR, DEFAULT_MODEL)):
+                model = DEFAULT_MODEL
+            else:
+                m_list = list_models()
+                model = m_list[0] if m_list else None
         if not model:
             return self._json(400, {"error": "no model loaded"})
         model_path = os.path.join(MODELS_DIR, model)
