@@ -27,12 +27,35 @@ import tempfile
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse
 
+# Safe logging for GUI / windowed mode
+class SafeStream:
+    def __init__(self, stream):
+        self._stream = stream
+    def write(self, s):
+        if self._stream is not None:
+            try:
+                self._stream.write(s)
+            except Exception:
+                pass
+    def flush(self):
+        if self._stream is not None:
+            try:
+                self._stream.flush()
+            except Exception:
+                pass
+
+sys.stdout = SafeStream(sys.stdout)
+sys.stderr = SafeStream(sys.stderr)
+
 
 # ════════════════════════════════════════════════════════════════
 #  KONFIGURASI PATH
 # ════════════════════════════════════════════════════════════════
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    ROOT = os.path.dirname(sys.executable)
+else:
+    ROOT = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(ROOT, "models")
 BIN_DIR    = os.path.join(ROOT, "bin")
 WHISPER_CLI = os.path.join(BIN_DIR, "whisper-cli.exe")
@@ -297,7 +320,10 @@ class Handler(BaseHTTPRequestHandler):
 
     # ── Quiet logging ────────────────────────────────────────
     def log_message(self, format, *args):
-        sys.stderr.write(f"  [{self.log_date_time_string()}] {format % args}\n")
+        try:
+            sys.stderr.write(f"  [{self.log_date_time_string()}] {format % args}\n")
+        except Exception:
+            pass
 
     # ── JSON helper ──────────────────────────────────────────
     def _json(self, code: int, obj):
@@ -314,11 +340,26 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         if path in ("/", "/index.html"):
             return self.serve_index()
+        if path in ("/app.ico", "/favicon.ico"):
+            return self.serve_file(os.path.join(ROOT, "app.ico"), "image/x-icon")
+        if path == "/app.png":
+            return self.serve_file(os.path.join(ROOT, "app.png"), "image/png")
         if path == "/api/models":
             return self.api_models()
         if path == "/api/load-status":
             return self.api_load_status()
         return self._json(404, {"error": "not found"})
+
+    def serve_file(self, file_path: str, content_type: str):
+        if not os.path.isfile(file_path):
+            return self._json(404, {"error": "file not found"})
+        with open(file_path, "rb") as f:
+            data = f.read()
+        self.send_response(200)
+        self.send_header("Content-Type",   content_type)
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
 
     def do_POST(self):
         path = urlparse(self.path).path
